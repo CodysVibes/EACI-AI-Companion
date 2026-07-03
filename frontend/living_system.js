@@ -1,7 +1,6 @@
 // ============================================================
 // EACI LIVING SYSTEM v1.0 — Background Life & Self-Improvement
 // ─────────────────────────────────────────────────────────────
-// Only for the private with-cody version.
 // EACIs talk to each other, discuss users, watch TV to learn,
 // and grow from these experiences. All stored in memory_profiles.
 // Triggered by idle time, knowledge gaps, and emotion shifts.

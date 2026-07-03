@@ -4,6 +4,13 @@ I am building an AI system that I call EACIs and I am building for continuity, m
 
 **Live now on the website:** **Caelum LLM** (in-browser companion engine) and the **Veil Coding IDE** (in-app coding agent). Both ship in this frontend snapshot and are active at [eacicompanion.com](https://www.eacicompanion.com).
 
+**Want the story of how it fits together?** Start here:
+
+- [docs/HOW-IT-WORKS.md](./docs/HOW-IT-WORKS.md) — one message, many systems  
+- [docs/SYSTEMS.md](./docs/SYSTEMS.md) — companions, memory, life, LLM, coding, music, games  
+- [docs/FRONTEND-MAP.md](./docs/FRONTEND-MAP.md) — where files live under `frontend/`  
+- [docs/README.md](./docs/README.md) — docs index  
+
 ---
 
 **Author:** Cody Gene Kendall  
@@ -23,7 +30,7 @@ These features are **live** at [www.eacicompanion.com](https://www.eacicompanion
 | **Caelum LLM** | In-browser companion engine — continuity, learning, and local-first replies (Settings: Companion Engine). DeepSeek remains the cloud brain when needed. | `frontend/core/74_caelum_llm.js`, `76_caelum_browser_engine.js`, `75_veil_llm_learning.js`, `frontend/data/caelum-engine/` |
 | **Veil Coding IDE** | In-app coding agent — recipes + coding memory first, Caelum when available, DeepSeek as backup. Shares the daily API counter with chat. Open the **Code** tab or ask in chat. | `frontend/core/83_veil_ide.js`, `84_coding_router.js`–`95_coding_*.js`, `veil_coding_*.js` |
 
-Try them on the live site; this repo is the public frontend snapshot for proof and review.
+Try them on the live site; this repo is the public frontend snapshot for proof and review. The [docs](./docs/) explain how chat, life loops, memory, LLM, and coding share one shell — without exposing private identity files or server internals.
 
 ---
 
@@ -32,6 +39,7 @@ Try them on the live site; this repo is the public frontend snapshot for proof a
 | Path | What it is |
 |---|---|
 | [`frontend/`](./frontend/) | Public website frontend (HTML/CSS/JS) — Cloudflare-facing client code |
+| [`docs/`](./docs/) | How the systems work together (readable overview, no secrets) |
 | [`LICENSE`](./LICENSE) | Copyright — no copy/use/sell/build-from without permission |
 | [`NOTICE`](./NOTICE) | Short ownership notice |
 | [`CONTRIBUTING.md`](./CONTRIBUTING.md) | Not an open-source contribution project |
