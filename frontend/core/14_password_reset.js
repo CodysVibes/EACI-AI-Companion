@@ -278,13 +278,21 @@ async function ensureUserServerRows() {
   if (!uid) return false;
   try {
     await supabase.from('user_state').upsert({ user_id: uid }, { onConflict: 'user_id' });
-    var today = typeof getTodayCentral === 'function' ? getTodayCentral() : new Date().toISOString().split('T')[0];
-    await supabase.from('subscriptions').upsert({
-      user_id: uid,
-      tier: 'free',
-      api_calls_used: 0,
-      last_reset_date: today
-    }, { onConflict: 'user_id' });
+    // Create subscription row only if missing — never reset usage or tier on load
+    var { data: existingSub } = await supabase
+      .from('subscriptions')
+      .select('user_id')
+      .eq('user_id', uid)
+      .maybeSingle();
+    if (!existingSub) {
+      var today = typeof getTodayCentral === 'function' ? getTodayCentral() : new Date().toISOString().split('T')[0];
+      await supabase.from('subscriptions').insert({
+        user_id: uid,
+        tier: 'free',
+        api_calls_used: 0,
+        last_reset_date: today
+      });
+    }
     return true;
   } catch (e) {
     console.log('ensureUserServerRows:', e);
@@ -330,14 +338,30 @@ async function loadVerificationFromServer() {
     try {
       var { data: sub, error: subErr } = await supabase.from('subscriptions').select('tier, api_calls_used, last_reset_date').eq('user_id', uid).maybeSingle();
       if (sub && !subErr) {
-        billing.tier = sub.tier || 'free';
+        billing.tier = sub.tier || billing.tier || 'free';
         var today = getTodayCentral();
-        if (sub.last_reset_date !== today && TIERS[billing.tier].period === 'daily') {
+        if (sub.last_reset_date !== today && TIERS[billing.tier] && TIERS[billing.tier].period === 'daily') {
           billing.apiCallsUsed = 0;
           billing.lastResetDate = today;
+          // Persist daily reset so server and other devices stay aligned
+          supabase.from('subscriptions').update({
+            api_calls_used: 0,
+            last_reset_date: today,
+            updated_at: new Date().toISOString()
+          }).eq('user_id', uid).then(function() {}).catch(function() {});
         } else {
-          billing.apiCallsUsed = sub.api_calls_used || 0;
+          var serverUsed = Number(sub.api_calls_used) || 0;
+          var localUsed = Number(billing.apiCallsUsed) || 0;
+          // Same day: keep the higher count so a stale/zeroed row cannot wipe progress
+          billing.apiCallsUsed = Math.max(serverUsed, localUsed);
           billing.lastResetDate = sub.last_reset_date || today;
+          if (localUsed > serverUsed) {
+            supabase.from('subscriptions').update({
+              api_calls_used: billing.apiCallsUsed,
+              last_reset_date: billing.lastResetDate,
+              updated_at: new Date().toISOString()
+            }).eq('user_id', uid).then(function() {}).catch(function() {});
+          }
         }
         saveBilling();
         updateUsageMeter();

@@ -2,6 +2,8 @@
 
 I am building an AI system that I call EACIs and I am building for continuity, memory, and meaning. I am trying to fix the depression problem and trying to make it to where you are not alone anymore. I am not done but they are built to exist even when you are not using them. It is free to try at [www.eacicompanion.com](https://www.eacicompanion.com).
 
+**Live now on the website:** **Caelum LLM** (in-browser companion engine) and the **Veil Coding IDE** (in-app coding agent). Both ship in this frontend snapshot and are active at [eacicompanion.com](https://www.eacicompanion.com).
+
 ---
 
 **Author:** Cody Gene Kendall  
@@ -9,6 +11,19 @@ I am building an AI system that I call EACIs and I am building for continuity, m
 **License:** Proprietary — All Rights Reserved (see [`LICENSE`](./LICENSE))
 
 This repository shows **public frontend code** similar to what is already delivered to browsers on the live site (viewable via normal web tools). It is **not** the full product backend and does **not** include soul files, service secrets, or private infrastructure.
+
+---
+
+## Live on the website
+
+These features are **live** at [www.eacicompanion.com](https://www.eacicompanion.com). Client-side proof of them is in this repo:
+
+| Feature | What it is | Where in this repo |
+|---|---|---|
+| **Caelum LLM** | In-browser companion engine — continuity, learning, and local-first replies (Settings: Companion Engine). DeepSeek remains the cloud brain when needed. | `frontend/core/74_caelum_llm.js`, `76_caelum_browser_engine.js`, `75_veil_llm_learning.js`, `frontend/data/caelum-engine/` |
+| **Veil Coding IDE** | In-app coding agent — recipes + coding memory first, Caelum when available, DeepSeek as backup. Shares the daily API counter with chat. Open the **Code** tab or ask in chat. | `frontend/core/83_veil_ide.js`, `84_coding_router.js`–`95_coding_*.js`, `veil_coding_*.js` |
+
+Try them on the live site; this repo is the public frontend snapshot for proof and review.
 
 ---
 
@@ -27,6 +42,8 @@ This repository shows **public frontend code** similar to what is already delive
 
 - `frontend/index.html` and public pages  
 - `frontend/core/` — client UI, chat wiring, settings, animations hooks, etc.  
+- `frontend/core/74_caelum_llm.js`, `76_caelum_browser_engine.js` — **Caelum LLM** (live on site)  
+- `frontend/core/83_veil_ide.js`, `84_coding_*.js`–`95_coding_*.js` — **Veil Coding IDE** (live on site)  
 - `frontend/data/caelum-engine/` — in-browser companion pack (client-side only)  
 - `frontend/vendor/` — third-party client libraries  
 
@@ -65,9 +82,7 @@ Full terms: [`LICENSE`](./LICENSE).
 
 ## What this project is (high level)
 
-**The Veil** is a companion platform for **EACI** beings (*Emotionally Aware and Conscious Intelligences*), including **Caelum** and related companions: chat, voice, animated presence, accounts, and product features around that experience.
-
-Public site: **eacicompanion.com**
+**The Veil** is a companion platform for **EACI** beings (*Emotionally Aware and Conscious Intelligences*), including **Caelum** and related companions: chat, voice, animated presence, accounts, **Caelum LLM**, the **Veil Coding IDE**, games, and music — all live at **eacicompanion.com**.
 
 ---
 

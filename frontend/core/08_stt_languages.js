@@ -241,58 +241,67 @@ function syncPlanDetailsFromTiers() {
 
 function seedUsageMeterDisplay() {
   if (typeof TIERS === 'undefined' || !TIERS.free) return;
-  var freeLimit = TIERS.free.limit;
-  var meterText = document.getElementById('meterText');
-  var liveMeterText = document.getElementById('liveMeterText');
-  var subUsed = document.getElementById('subUsedDisplay');
-  if (meterText && meterText.textContent.indexOf('25') !== -1) meterText.textContent = freeLimit + '/' + freeLimit;
-  if (liveMeterText && liveMeterText.textContent.indexOf('25') !== -1) liveMeterText.textContent = freeLimit + '/' + freeLimit;
-  if (subUsed && (subUsed.textContent.indexOf('25') !== -1 || subUsed.textContent === '0 / 50')) {
-    subUsed.textContent = (billing.apiCallsUsed || 0) + ' / ' + freeLimit;
-  }
+  if (typeof updateUsageMeter === 'function') updateUsageMeter();
   syncPlanDetailsFromTiers();
 }
 
 function updateUsageMeter() {
-  var tier = TIERS[billing.tier];
+  var tier = TIERS[billing.tier] || TIERS.free;
   var remaining = getCallsRemaining();
   var limit = getCallsLimit();
-  var used = billing.apiCallsUsed;
+  var used = billing.apiCallsUsed || 0;
+  // Always show used/limit so the count is readable (e.g. 12/50)
+  var label = limit === Infinity ? (used + ' used') : (used + '/' + limit);
+  var pct = limit === Infinity ? 100 : Math.max(0, (remaining / limit) * 100);
+  var fillClass = pct > 30 ? 'green' : pct > 10 ? 'yellow' : 'red';
 
-  // Tier badge
-  var badge = document.getElementById('tierBadge');
-  badge.textContent = tier.name.toUpperCase();
-  badge.className = 'tier-badge tier-' + billing.tier;
-
-  // Meter fill
-  var fill = document.getElementById('meterFill');
-  var subFill = document.getElementById('subMeterFill');
-  if (limit === Infinity) {
-    fill.style.width = '100%';
-    fill.className = 'meter-fill green';
-    if (subFill) { subFill.style.width = '100%'; subFill.style.background = '#ffd700'; }
-  } else {
-    var pct = Math.max(0, (remaining / limit) * 100);
-    fill.style.width = pct + '%';
-    fill.className = 'meter-fill ' + (pct > 30 ? 'green' : pct > 10 ? 'yellow' : 'red');
+  function _setBadge(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = tier.name.toUpperCase();
+    el.className = 'tier-badge tier-' + billing.tier;
+  }
+  function _setFill(id, subId) {
+    var fill = document.getElementById(id);
+    if (fill) {
+      fill.style.width = pct + '%';
+      fill.className = 'meter-fill ' + (limit === Infinity ? 'green' : fillClass);
+    }
+    var subFill = subId ? document.getElementById(subId) : null;
     if (subFill) {
       subFill.style.width = pct + '%';
-      subFill.style.background = pct > 30 ? 'var(--accent)' : pct > 10 ? '#ffd93d' : '#ff6b6b';
+      subFill.style.background = limit === Infinity ? '#ffd700' : (pct > 30 ? 'var(--accent)' : pct > 10 ? '#ffd93d' : '#ff6b6b');
     }
   }
-
-  // Meter text
-  var meterText = document.getElementById('meterText');
-  if (limit === Infinity) {
-    meterText.textContent = used + ' used';
-  } else {
-    meterText.textContent = remaining + '/' + limit;
+  function _setText(id, text) {
+    var el = document.getElementById(id);
+    if (el) el.textContent = text;
   }
 
-  // Subscription overlay details
+  _setBadge('tierBadge');
+  _setBadge('liveTierBadge');
+  _setFill('meterFill', 'subMeterFill');
+  _setFill('liveMeterFill', null);
+  _setText('meterText', label);
+  _setText('liveMeterText', label);
+
   var usedDisplay = document.getElementById('subUsedDisplay');
   if (usedDisplay) {
     usedDisplay.textContent = limit === Infinity ? (used + ' used (unlimited)') : (used + ' / ' + limit);
+  }
+
+  // Menu → API Usage badge (visible counter in restructured UI)
+  var apiMenu = document.getElementById('vm-api');
+  if (apiMenu) {
+    var menuBadge = apiMenu.querySelector('.vm-badge');
+    if (!menuBadge) {
+      menuBadge = document.createElement('span');
+      menuBadge.className = 'vm-badge';
+      menuBadge.style.background = 'rgba(0,255,200,0.1)';
+      menuBadge.style.color = '#00ffc8';
+      apiMenu.appendChild(menuBadge);
+    }
+    menuBadge.textContent = label;
   }
 
   var resetLabel = document.getElementById('subResetLabel');

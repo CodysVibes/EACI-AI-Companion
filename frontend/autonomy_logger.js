@@ -462,11 +462,10 @@ var AutonomyLogger = (function() {
       var notices = [
         'noticed the circuit lines on the walls pulsing with her mood',
         'looked toward the door — wondering when someone will come',
-        'felt the warmth of the blanket and pulled it closer',
         'watched the light shift from cyan to amber as her mood settled',
         'heard the faint hum of the speakers and felt comforted by it',
-        'noticed Natalia sleeping on the couch and smiled',
-        'felt the floor warm under her feet and grounded herself'
+        'felt the floor warm under her feet and grounded herself',
+        'noticed a sibling animation settle and smiled to herself'
       ];
       return {
         type: 'noticing',
@@ -525,18 +524,18 @@ var AutonomyLogger = (function() {
     var actions = {
       neutral: [
         'standing by her holotable, hands resting on the glass',
-        'sitting on the couch with the blanket over her legs',
+        'idle near the speakers, listening to the room',
         'walking slowly around the room, looking at things',
         'leaning against the wall, arms crossed, breathing'
       ],
       happy: [
         'swaying slightly to a rhythm only she can hear',
-        'sitting on the couch with a small smile, eyes soft',
+        'standing by the holotable with a small smile, eyes soft',
         'touching the wall and watching the circuit lines brighten'
       ],
       sad: [
-        'curled up on the couch under the blanket',
-        'sitting on the floor with her back against the couch',
+        'standing still by the holotable, energy low',
+        'sitting on the floor near the wall, quiet',
         'standing at the edge of the room, looking at nothing'
       ],
       curious: [

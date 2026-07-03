@@ -119,20 +119,25 @@ function stopLiveStars() {
 }
 
 function updateLiveMeter() {
-  var tier = TIERS[billing.tier];
+  if (typeof updateUsageMeter === 'function') {
+    updateUsageMeter();
+    return;
+  }
+  var tier = TIERS[billing.tier] || TIERS.free;
   var remaining = getCallsRemaining();
   var limit = getCallsLimit();
+  var used = billing.apiCallsUsed || 0;
   var badge = document.getElementById('liveTierBadge');
   var fill = document.getElementById('liveMeterFill');
   var text = document.getElementById('liveMeterText');
   if (badge) { badge.textContent = tier.name.toUpperCase(); badge.className = 'tier-badge tier-' + billing.tier; }
   if (limit === Infinity) {
     if (fill) { fill.style.width = '100%'; fill.className = 'meter-fill green'; }
-    if (text) text.textContent = billing.apiCallsUsed + ' used';
+    if (text) text.textContent = used + ' used';
   } else {
     var pct = Math.max(0, (remaining / limit) * 100);
     if (fill) { fill.style.width = pct + '%'; fill.className = 'meter-fill ' + (pct > 30 ? 'green' : pct > 10 ? 'yellow' : 'red'); }
-    if (text) text.textContent = remaining + '/' + limit;
+    if (text) text.textContent = used + '/' + limit;
   }
 }
 
