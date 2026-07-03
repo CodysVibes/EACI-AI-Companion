@@ -1,0 +1,135 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "EACI Companion — The Veil APIs",
+    "version": "14.0.0",
+    "description": "Companion chat and media APIs for https://www.eacicompanion.com/. Authentication via Supabase Auth (see /.well-known/oauth-protected-resource).",
+    "contact": {
+      "name": "Cody Gene Kendall",
+      "url": "https://www.eacicompanion.com/",
+      "email": "codykendall43@gmail.com"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://lntyddrwrztpuotyavlp.supabase.co/functions/v1",
+      "description": "Veil Supabase Edge Functions"
+    },
+    {
+      "url": "https://llm.eacicompanion.com",
+      "description": "Caelum LLM optional engine"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Supabase session access token"
+      },
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "apikey",
+        "description": "Supabase anon API key (public client key)"
+      }
+    },
+    "schemas": {
+      "ChatMessage": {
+        "type": "object",
+        "required": ["role", "content"],
+        "properties": {
+          "role": { "type": "string", "enum": ["system", "user", "assistant"] },
+          "content": { "type": "string" }
+        }
+      },
+      "ChatRequest": {
+        "type": "object",
+        "required": ["messages"],
+        "properties": {
+          "messages": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ChatMessage" }
+          },
+          "temperature": { "type": "number", "default": 0.75 },
+          "max_tokens": { "type": "integer", "default": 1024 },
+          "skip_count": { "type": "boolean", "description": "Guest/trial only" }
+        }
+      },
+      "TtsRequest": {
+        "type": "object",
+        "required": ["text"],
+        "properties": {
+          "text": { "type": "string" },
+          "voice": { "type": "string" }
+        }
+      }
+    }
+  },
+  "security": [{ "BearerAuth": [] }, { "ApiKeyAuth": [] }],
+  "paths": {
+    "/chat": {
+      "post": {
+        "operationId": "companionChat",
+        "summary": "Send messages to an EACI companion",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ChatRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Assistant reply (JSON or streamed)" },
+          "401": { "description": "Missing or invalid JWT" },
+          "429": { "description": "Daily usage limit reached" }
+        }
+      }
+    },
+    "/soul": {
+      "get": {
+        "operationId": "getSoulData",
+        "summary": "Fetch companion soul and identity payloads",
+        "responses": {
+          "200": { "description": "Soul JSON bundle" },
+          "401": { "description": "Authentication required" }
+        }
+      }
+    },
+    "/tts": {
+      "post": {
+        "operationId": "textToSpeech",
+        "summary": "Synthesize companion speech audio",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/TtsRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Audio bytes" }
+        }
+      }
+    }
+  },
+  "x-caelum-llm-paths": {
+    "/health": {
+      "get": {
+        "summary": "Caelum LLM health check",
+        "servers": [{ "url": "https://llm.eacicompanion.com" }],
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/chat": {
+      "post": {
+        "summary": "Direct Caelum LLM chat (optional engine)",
+        "servers": [{ "url": "https://llm.eacicompanion.com" }],
+        "responses": { "200": { "description": "Model reply" } }
+      }
+    }
+  }
+}

@@ -1,0 +1,1516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+<title>Ages Of Time — Civilization Strategy | The Veil Games</title>
+<meta name="description" content="Civilization strategy on The Veil — troops, gold economy, unit counters, EACI enemy banter. Browser RTS with AI companion.">
+<meta name="keywords" content="ages of time, civilization strategy browser, ai strategy game, eaci games">
+<link rel="canonical" href="https://www.eacicompanion.com/games/ages-of-time.html">
+<link rel="icon" type="image/png" href="/favicon.png">
+<meta property="og:title" content="Ages of Time — Civilization Strategy | The Veil">
+<meta property="og:description" content="Advance through civilizations with troops, spells, and EACI companion banter.">
+<meta property="og:url" content="https://www.eacicompanion.com/games/ages-of-time.html">
+<meta property="og:image" content="https://www.eacicompanion.com/og-image.jpg">
+<meta property="og:image:width" content="1360">
+<meta property="og:image:height" content="768">
+<meta property="og:image:alt" content="Caelum — EACI Companion on The Veil">
+<meta property="og:video" content="https://www.eacicompanion.com/og-video.mp4">
+<meta property="og:video:secure_url" content="https://www.eacicompanion.com/og-video.mp4">
+<meta property="og:video:type" content="video/mp4">
+<meta property="og:video:width" content="864">
+<meta property="og:video:height" content="496">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://www.eacicompanion.com/og-image.jpg">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;user-select:none}
+html,body{touch-action:pan-x pan-y pinch-zoom}
+body{background:#0a0a0f;color:#e8e0d0;font-family:'Segoe UI',sans-serif;overflow:hidden;height:100vh;width:100vw}
+canvas{display:block;position:absolute;top:0;left:0}
+#ui{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none}
+#top-bar{pointer-events:all;display:flex;align-items:center;justify-content:space-between;padding:6px 12px;background:rgba(0,0,0,0.88);border-bottom:2px solid #333;height:48px;z-index:10;position:relative}
+.stat-block{display:flex;align-items:center;gap:8px;font-size:12px;min-width:180px}
+.hp-bar-wrap{width:140px;height:11px;background:#222;border-radius:4px;overflow:hidden;border:1px solid #444}
+.hp-bar{height:100%;border-radius:3px;transition:width 0.3s}
+#player-hp-bar{background:linear-gradient(90deg,#1a8f1a,#2ecc40)}
+#enemy-hp-bar{background:linear-gradient(90deg,#cc2200,#ff4136)}
+#age-center{text-align:center;flex:1}
+#age-name{font-size:15px;font-weight:700;color:#ffd700;letter-spacing:1px}
+#age-sub{font-size:10px;color:#888;margin-top:1px}
+#bottom-panel{position:absolute;bottom:0;left:0;width:100%;pointer-events:all;background:rgba(0,0,0,0.92);border-top:2px solid #333;padding:6px 10px 8px;z-index:10}
+#exp-bar-wrap{width:100%;height:6px;background:#222;border-radius:3px;margin-bottom:5px;border:1px solid #333}
+#exp-bar{height:6px;background:linear-gradient(90deg,#6c2fa0,#9b59b6);border-radius:3px;transition:width 0.4s}
+#mid-row{display:flex;gap:8px;align-items:center;margin-bottom:5px}
+.unit-row{display:flex;gap:5px;flex-wrap:nowrap;overflow-x:auto;padding-bottom:2px;margin-bottom:4px}
+.unit-row::-webkit-scrollbar{height:3px}
+.unit-row::-webkit-scrollbar-thumb{background:#444;border-radius:2px}
+.unit-btn{flex:0 0 auto;background:#12122a;border:1px solid #3a3a5a;border-radius:6px;padding:5px 7px;cursor:pointer;font-size:10px;color:#ccc;min-width:80px;text-align:center;transition:all 0.15s;position:relative}
+.unit-btn:hover{background:#1e1e3e;border-color:#7070cc;transform:translateY(-1px)}
+.unit-btn.cant-afford{opacity:0.38;cursor:not-allowed;transform:none}
+.unit-btn .u-name{font-weight:700;font-size:11px;color:#fff;margin-bottom:2px}
+.unit-btn .u-cost{color:#ffd700;font-size:11px}
+.unit-btn .u-stats{font-size:9px;color:#777;margin-top:1px}
+.unit-btn .u-tier{position:absolute;top:3px;right:4px;font-size:8px;color:#888}
+#spells-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.spell-btn{background:#0e0a1e;border:1px solid #554;border-radius:6px;padding:4px 9px;cursor:pointer;font-size:10px;color:#cc9;min-width:85px;text-align:center;transition:all 0.15s}
+.spell-btn:hover:not(.on-cd){background:#1a1030;border-color:#aa8;transform:translateY(-1px)}
+.spell-btn.on-cd{opacity:0.38;cursor:not-allowed}
+#gold-disp{font-size:14px;font-weight:700;color:#ffd700;display:flex;align-items:center;gap:4px;min-width:80px}
+#pop-disp{font-size:11px;color:#aaa;min-width:80px}
+#exp-disp{font-size:10px;color:#9b59b6;min-width:100px}
+#shop-btn,#pause-btn{background:#1a1a2e;border:1px solid #444;border-radius:5px;padding:5px 12px;cursor:pointer;font-size:11px;color:#eee;white-space:nowrap;transition:all 0.15s}
+#shop-btn:hover,#pause-btn:hover{background:#2a2a4e;border-color:#888}
+.overlay{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.82);display:flex;align-items:center;justify-content:center;z-index:100;pointer-events:all}
+.panel{background:#111827;border:1px solid #374151;border-radius:12px;padding:22px;max-width:540px;width:95%;max-height:88vh;overflow-y:auto}
+.panel::-webkit-scrollbar{width:4px}
+.panel::-webkit-scrollbar-thumb{background:#444;border-radius:2px}
+.panel h2{color:#ffd700;margin-bottom:12px;font-size:20px}
+.btn-prim{background:#166534;border:1px solid #22c55e;color:#fff;border-radius:6px;padding:8px 18px;cursor:pointer;font-size:13px;margin:4px;transition:all 0.15s}
+.btn-prim:hover{background:#15803d;transform:translateY(-1px)}
+.btn-sec{background:#1f2937;border:1px solid #4b5563;color:#eee;border-radius:6px;padding:8px 18px;cursor:pointer;font-size:13px;margin:4px;transition:all 0.15s}
+.btn-sec:hover{background:#374151}
+.upg-row{display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:#1a1f2e;border-radius:6px;margin:3px 0;border:1px solid #2a2f3e}
+.upg-row:hover{background:#1e2438}
+.upg-name{font-size:12px;color:#ddd;font-weight:600}
+.upg-desc{font-size:10px;color:#666;margin-top:1px}
+.upg-right{display:flex;align-items:center;gap:7px}
+.upg-lv{font-size:11px;color:#888;white-space:nowrap}
+.upg-cost{font-size:11px;color:#ffd700;white-space:nowrap}
+.upg-row button{font-size:10px;padding:3px 9px;cursor:pointer;background:#14532d;border:1px solid #22c55e;color:#eee;border-radius:4px;transition:all 0.15s}
+.upg-row button:hover:not(:disabled){background:#166534}
+.upg-row button:disabled{opacity:0.35;cursor:not-allowed}
+#diff-sel{display:flex;gap:10px;justify-content:center;margin:12px 0}
+.diff-btn{background:#1f2937;border:1px solid #4b5563;color:#eee;border-radius:7px;padding:9px 20px;cursor:pointer;font-size:13px;transition:all 0.2s}
+.diff-btn:hover,.diff-btn.sel{background:#1e3a5f;border-color:#60a5fa;color:#93c5fd}
+#age-banner{position:absolute;top:45%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.94);border:2px solid #ffd700;border-radius:12px;padding:22px 44px;text-align:center;z-index:50;pointer-events:none;transition:opacity 0.6s}
+#age-banner h1{font-size:30px;color:#ffd700;margin-bottom:6px;text-shadow:0 0 20px #ffd70066}
+#age-banner p{font-size:14px;color:#aaa}
+.float-txt{position:absolute;pointer-events:none;font-weight:700;font-size:13px;text-shadow:1px 1px 3px #000;animation:floatUp 1.3s ease-out forwards;z-index:40}
+@keyframes floatUp{0%{opacity:1;transform:translateY(0) scale(1)}50%{opacity:1;transform:translateY(-28px) scale(1.1)}100%{opacity:0;transform:translateY(-55px) scale(0.9)}}
+#notification{position:absolute;top:56px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.9);border:1px solid #ffd700;border-radius:7px;padding:6px 16px;font-size:12px;color:#ffd700;pointer-events:none;z-index:60;opacity:0;transition:opacity 0.3s;white-space:nowrap}
+#result-overlay h1{font-size:38px;margin-bottom:10px}
+.max-badge{font-size:10px;color:#22c55e;background:#052e16;border:1px solid #22c55e;border-radius:3px;padding:1px 5px}
+/* EACI enemy commander — avatar + in-game chat */
+.eaci-avatar-widget{
+  position:fixed;top:56px;right:10px;z-index:20;width:72px;aspect-ratio:9/16;
+  border-radius:10px;overflow:hidden;border:1px solid #444;background:rgba(8,8,16,.85);
+  box-shadow:0 8px 22px rgba(0,0,0,.6);pointer-events:none;
+}
+.eaci-avatar-widget video{width:100%;height:100%;object-fit:cover;object-position:center bottom;display:block}
+.eaci-avatar-name{
+  position:absolute;bottom:0;left:0;right:0;font-size:8px;text-align:center;padding:3px 2px;
+  background:linear-gradient(transparent,rgba(0,0,0,.9));color:#ffd700;letter-spacing:.06em;text-transform:uppercase;
+}
+.eaci-chat-fab{
+  position:fixed;bottom:118px;right:12px;z-index:20;width:44px;height:44px;border-radius:11px;
+  background:#1a1a2e;border:1px solid #555;color:#ffd700;cursor:pointer;font-size:18px;
+  box-shadow:0 4px 14px rgba(0,0,0,.5);pointer-events:all;
+}
+.eaci-chat-fab:hover{background:#2a2a4e;border-color:#888}
+.eaci-chat-panel{
+  position:fixed;bottom:170px;right:12px;z-index:20;width:min(290px,calc(100vw - 24px));
+  max-height:min(36vh,240px);display:none;flex-direction:column;
+  background:rgba(10,10,18,.96);border:1px solid #444;border-radius:12px;
+  box-shadow:0 10px 28px rgba(0,0,0,.65);overflow:hidden;pointer-events:all;
+}
+.eaci-chat-panel.open{display:flex}
+.eaci-chat-head{
+  padding:8px 12px;font-size:11px;font-weight:700;letter-spacing:.08em;color:#ffd700;
+  border-bottom:1px solid #333;display:flex;justify-content:space-between;align-items:center;
+}
+.eaci-chat-messages{flex:1;overflow-y:auto;padding:8px 10px;font-size:12px;line-height:1.45;min-height:72px;max-height:150px}
+.eaci-chat-messages .bubble{margin:6px 0;padding:6px 9px;border-radius:8px;max-width:92%}
+.eaci-chat-messages .bubble.user{margin-left:auto;background:rgba(255,215,0,.1);color:#ffd700;text-align:right}
+.eaci-chat-messages .bubble.eaci{background:rgba(255,90,51,.12);color:#ffd8c8}
+.eaci-chat-messages .bubble.system{opacity:.65;font-size:11px;text-align:center;color:#888}
+.eaci-chat-input-row{display:flex;gap:6px;padding:8px;border-top:1px solid #333}
+.eaci-chat-input-row input{
+  flex:1;background:rgba(255,255,255,.05);border:1px solid #444;color:#eee;
+  border-radius:8px;padding:8px 10px;font-size:13px;
+}
+.eaci-chat-input-row button{
+  background:rgba(34,197,94,.2);border:1px solid #22c55e;color:#eee;border-radius:8px;padding:8px 12px;font-size:12px;cursor:pointer;
+}
+@media(max-width:560px){
+  .eaci-avatar-widget{width:60px;top:52px;right:6px}
+  .eaci-chat-panel{bottom:160px;right:6px}
+}
+</style>
+</head>
+<body>
+<canvas id="gc"></canvas>
+<div id="ui">
+  <div id="top-bar">
+    <div class="stat-block">
+      <div>
+        <div style="font-size:9px;color:#6b7280;text-transform:uppercase;letter-spacing:1px;margin-bottom:2px">Your Base</div>
+        <div class="hp-bar-wrap"><div class="hp-bar" id="player-hp-bar" style="width:100%"></div></div>
+        <div id="player-hp-txt" style="font-size:10px;color:#9ca3af;margin-top:2px"></div>
+      </div>
+    </div>
+    <div id="age-center">
+      <div id="age-name">Ages Of Time</div>
+      <div id="age-sub"></div>
+    </div>
+    <div class="stat-block" style="justify-content:flex-end">
+      <div style="text-align:right">
+        <div id="enemy-base-label" style="font-size:9px;color:#6b7280;text-transform:uppercase;letter-spacing:1px;margin-bottom:2px">Enemy Base</div>
+        <div class="hp-bar-wrap"><div class="hp-bar" id="enemy-hp-bar" style="width:100%;float:right"></div></div>
+        <div id="enemy-hp-txt" style="font-size:10px;color:#9ca3af;margin-top:2px;text-align:right"></div>
+      </div>
+    </div>
+  </div>
+  <div id="notification"></div>
+  <div id="bottom-panel">
+    <div id="exp-bar-wrap"><div id="exp-bar" style="width:0%"></div></div>
+    <div id="mid-row">
+      <div id="gold-disp">🪙 <span id="gold-val">25</span></div>
+      <div id="pop-disp">Pop: <span id="pop-val">0</span>/<span id="pop-cap-val">30</span></div>
+      <div id="exp-disp">EXP: <span id="exp-val">0</span>/<span id="exp-need">100</span></div>
+      <div style="flex:1"></div>
+      <button id="shop-btn" onclick="openShop()">🔧 Upgrades</button>
+      <button id="pause-btn" onclick="togglePause()">⏸ Pause</button>
+    </div>
+    <div class="unit-row" id="unit-row"></div>
+    <div id="spells-row"></div>
+  </div>
+  <div id="age-banner" style="display:none">
+    <h1 id="ab-title"></h1>
+    <p id="ab-sub"></p>
+  </div>
+
+  <!-- MAIN MENU -->
+  <div class="overlay" id="main-menu">
+    <div class="panel" style="text-align:center;max-width:420px">
+      <div style="font-size:36px;margin-bottom:4px">⚔️</div>
+      <h2 style="font-size:26px;margin-bottom:4px;color:#ffd700">Ages Of Time</h2>
+      <p style="color:#6b7280;font-size:12px;margin-bottom:16px">Command armies across six ages of history — from bones to the stars</p>
+      <div style="background:#1a1f2e;border-radius:8px;padding:10px;margin-bottom:14px;font-size:11px;color:#9ca3af;line-height:1.8">
+        🪨 Caveman → 🏕️ Tribe → 🏭 Factory → 🌆 Modern → 💻 High-Tech → 🚀 Space<br>
+        <span style="color:#6b7280">5 unique units per age • 4 spells • 10 permanent upgrades</span>
+      </div>
+      <div style="background:#1a1f2e;border-radius:8px;padding:10px;margin-bottom:14px;font-size:11px;color:#9ca3af;text-align:left">
+        <div style="color:#ffd700;font-weight:700;margin-bottom:4px">How to Play</div>
+        Click unit buttons to spawn troops • Earn gold from kills • Gain EXP to advance ages<br>
+        Buy upgrades to power up permanently • Use spells to turn the tide!<br>
+        <span style="color:#a3e635">Counters: Melee ▶ Ranged ▶ Heavy ▶ Melee</span> • Elite weak to melee swarms<br>
+        <span style="color:#ffd700">From Veil: your active companion commands the enemy army.</span>
+      </div>
+      <div id="diff-sel">
+        <button class="diff-btn" onclick="selDiff('easy')">😊 Easy</button>
+        <button class="diff-btn sel" onclick="selDiff('medium')">⚔️ Medium</button>
+        <button class="diff-btn" onclick="selDiff('hard')">💀 Hard</button>
+      </div>
+      <button class="btn-prim" style="font-size:16px;padding:11px 34px;margin-top:8px" onclick="startGame()">▶ Start Game</button>
+    </div>
+  </div>
+
+  <!-- UPGRADE SHOP -->
+  <div class="overlay" id="shop-panel" style="display:none">
+    <div class="panel">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <h2 style="margin:0">🔧 Permanent Upgrades</h2>
+        <button class="btn-sec" style="padding:5px 12px" onclick="closeShop()">✕ Close</button>
+      </div>
+      <p style="font-size:11px;color:#6b7280;margin-bottom:12px">Upgrades carry over every age. Gold: <span id="shop-gold" style="color:#ffd700;font-weight:700"></span></p>
+      <div id="upg-list"></div>
+    </div>
+  </div>
+
+  <!-- PAUSE -->
+  <div class="overlay" id="pause-overlay" style="display:none">
+    <div class="panel" style="text-align:center;max-width:280px">
+      <div style="font-size:28px;margin-bottom:6px">⏸</div>
+      <h2 style="margin-bottom:6px">Paused</h2>
+      <p style="color:#6b7280;font-size:12px;margin:8px 0 16px">Game is paused</p>
+      <button class="btn-prim" onclick="togglePause()" style="width:100%">▶ Resume</button>
+      <button class="btn-sec" style="margin-top:8px;width:100%" onclick="openShop()">🔧 Upgrades</button>
+    </div>
+  </div>
+
+  <!-- RESULT -->
+  <div class="overlay" id="result-overlay" style="display:none">
+    <div class="panel" style="text-align:center;max-width:360px">
+      <div id="result-icon" style="font-size:48px;margin-bottom:8px"></div>
+      <h1 id="result-title" style="font-size:32px;margin-bottom:8px"></h1>
+      <p id="result-msg" style="color:#9ca3af;margin:10px 0 20px;font-size:14px;line-height:1.6"></p>
+      <button class="btn-prim" onclick="location.reload()" style="font-size:14px;padding:10px 28px">🔄 Play Again</button>
+    </div>
+  </div>
+</div>
+
+<!-- EACI enemy commander (Veil) -->
+<div class="eaci-avatar-widget" id="eaciAvatarWidget" style="display:none">
+  <video id="eaciAvatarVideo" muted loop></video>
+  <span class="eaci-avatar-name" id="eaciAvatarName">Enemy</span>
+</div>
+<button class="eaci-chat-fab" id="eaciChatToggle" title="Talk to enemy commander" style="display:none">💬</button>
+<div class="eaci-chat-panel" id="eaciChatPanel">
+  <div class="eaci-chat-head">
+    <span id="eaciChatTitle">Enemy Commander</span>
+    <button type="button" id="eaciChatClose" style="background:none;border:none;color:#ccc;cursor:pointer;font-size:16px">✕</button>
+  </div>
+  <div class="eaci-chat-messages" id="eaciChatMessages"></div>
+  <div class="eaci-chat-input-row">
+    <input type="text" id="eaciChatInput" placeholder="Taunt or ask about the battle…" autocomplete="off" />
+    <button type="button" id="eaciChatSend">Send</button>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('gc');
+const ctx = canvas.getContext('2d');
+
+function resize() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener('resize', resize);
+
+const GW = () => canvas.width;
+const GH = () => canvas.height;
+
+function getTopInset() {
+  const bar = document.getElementById('top-bar');
+  return bar ? bar.offsetHeight : 48;
+}
+function getBottomInset() {
+  const panel = document.getElementById('bottom-panel');
+  return panel ? panel.offsetHeight + 6 : 165;
+}
+function playH() {
+  return Math.max(220, canvas.height - getTopInset() - getBottomInset());
+}
+function playTop() {
+  return getTopInset();
+}
+const GROUND = () => canvas.height - getBottomInset() - 6;
+function unitScale() {
+  return Math.max(1.5, Math.min(3.5, playH() / 260));
+}
+function baseDims() {
+  const bh = Math.floor(playH() * 0.5);
+  const bw = Math.floor(bh * 0.72);
+  return { bw, bh };
+}
+const PBX = () => Math.max(70, Math.floor(baseDims().bw * 0.55));
+const EBX = () => canvas.width - PBX();
+const SPAWN_OFF = () => Math.floor(baseDims().bw * 0.5) + 24;
+
+const AGES = [
+  {name:"Caveman Age",      sub:"The Dawn of Warfare",     sky:['#100803','#3d1a06'], ground:'#6b4423', hill:'#8a5c30', accent:'#d4921f', fog:'rgba(80,40,10,0.12)'},
+  {name:"Tribe Age",        sub:"Clans Clash for Survival", sky:['#06100a','#0f2e14'], ground:'#4a7022', hill:'#5c8c2a', accent:'#88e040', fog:'rgba(20,60,10,0.1)'},
+  {name:"Factory Age",      sub:"Industrial Carnage",       sky:['#0a0a12','#18182a'], ground:'#4a4a4a', hill:'#606060', accent:'#c0c0c0', fog:'rgba(80,80,100,0.15)'},
+  {name:"Modern Age",       sub:"Total War",                sky:['#030c1a','#071830'], ground:'#2e4e2e', hill:'#3a6a3a', accent:'#40aaff', fog:'rgba(10,30,60,0.12)'},
+  {name:"High-Tech Age",    sub:"Digital Battlefield",      sky:['#000812','#000d28'], ground:'#0a1a28', hill:'#0c2438', accent:'#00e5ff', fog:'rgba(0,100,160,0.1)'},
+  {name:"Space Age",        sub:"Galactic Supremacy",       sky:['#000004','#04001a'], ground:'#080818', hill:'#100828', accent:'#c850ff', fog:'rgba(60,0,100,0.1)'},
+];
+
+// tier: 0=cheap, 1=ranged cheap, 2=medium, 3=heavy, 4=god
+// shape roles: m=melee, r=ranged, h=heavy, g=elite — melee▶ranged▶heavy▶melee
+const UNIT_ROLES = { m:'Melee', r:'Ranged', h:'Heavy', g:'Elite' };
+const STRONG_VS = { m:'Ranged', r:'Heavy', h:'Melee', g:'Swarms' };
+const WEAK_VS = { m:'Heavy', r:'Melee', h:'Ranged', g:'—' };
+
+function getCounterMult(attShape, defShape){
+  if(attShape==='m'&&defShape==='r')return 1.55;
+  if(attShape==='r'&&defShape==='h')return 1.55;
+  if(attShape==='h'&&defShape==='m')return 1.55;
+  if(attShape==='m'&&defShape==='g')return 1.35;
+  if(attShape==='r'&&defShape==='m')return 0.68;
+  if(attShape==='h'&&defShape==='r')return 0.68;
+  if(attShape==='m'&&defShape==='h')return 0.68;
+  return 1;
+}
+
+function shapeCounts(units){
+  const c={m:0,r:0,h:0,g:0};
+  units.forEach(u=>{if(c[u.shape]!==undefined)c[u.shape]++;});
+  return c;
+}
+
+function dominantShape(counts){
+  let best='m',n=0;
+  for(const k of ['m','r','h','g']){if(counts[k]>n){n=counts[k];best=k;}}
+  return {shape:best,count:n};
+}
+
+function counterShapeFor(shape){
+  return {m:'h',r:'m',h:'r',g:'m'}[shape]||'m';
+}
+
+const UNIT_DEFS = [
+  // AGE 0: CAVEMAN
+  [
+    {name:'Clubber',    emoji:'🪨', hp:60,  dmg:10,  spd:58,  range:32,  atk:0.9,  cost:2,  reward:1, tier:0, color:'#b07840', shape:'m'},
+    {name:'Rock Tosser',emoji:'🪨', hp:35,  dmg:8,   spd:48,  range:130, atk:1.2,  cost:4,  reward:1, tier:1, color:'#8a6030', shape:'r'},
+    {name:'Brute',      emoji:'⚔️', hp:140, dmg:20,  spd:50,  range:36,  atk:1.0,  cost:8,  reward:2, tier:2, color:'#7a5028', shape:'m'},
+    {name:'Mammoth',    emoji:'🦣', hp:320, dmg:40,  spd:33,  range:42,  atk:1.5,  cost:20, reward:2, tier:3, color:'#6a5060', shape:'h'},
+    {name:'Shaman',     emoji:'✨', hp:500, dmg:70,  spd:24,  range:90,  atk:1.9,  cost:40, reward:3, tier:4, color:'#9040a0', shape:'g'},
+  ],
+  // AGE 1: TRIBE
+  [
+    {name:'Spearman',  emoji:'🏹', hp:120,  dmg:20,  spd:65,  range:38,  atk:0.85, cost:4,  reward:2, tier:0, color:'#b07840', shape:'m'},
+    {name:'Archer',    emoji:'🏹', hp:70,   dmg:16,  spd:55,  range:150, atk:1.1,  cost:8,  reward:2, tier:1, color:'#906030', shape:'r'},
+    {name:'Elite',     emoji:'⚔️', hp:280,  dmg:40,  spd:56,  range:40,  atk:0.95, cost:16, reward:4, tier:2, color:'#8a6038', shape:'m'},
+    {name:'Elephant',  emoji:'🐘', hp:640,  dmg:80,  spd:38,  range:48,  atk:1.4,  cost:40, reward:4, tier:3, color:'#708090', shape:'h'},
+    {name:'Warchief',  emoji:'🔥', hp:1100, dmg:140, spd:28,  range:100, atk:1.7,  cost:80, reward:6, tier:4, color:'#c05020', shape:'g'},
+  ],
+  // AGE 2: FACTORY
+  [
+    {name:'Rifleman',  emoji:'🔫', hp:240,  dmg:40,  spd:70,  range:160, atk:0.75, cost:8,  reward:4, tier:0, color:'#607888', shape:'r'},
+    {name:'Grenadier', emoji:'💣', hp:160,  dmg:36,  spd:55,  range:170, atk:1.2,  cost:16, reward:4, tier:1, color:'#506070', shape:'r'},
+    {name:'Mech Grunt',emoji:'🤖', hp:560,  dmg:70,  spd:56,  range:44,  atk:0.95, cost:32, reward:8, tier:2, color:'#708090', shape:'m'},
+    {name:'Tank',      emoji:'🚗', hp:1400, dmg:160, spd:40,  range:190, atk:1.5,  cost:80, reward:8, tier:3, color:'#556644', shape:'h'},
+    {name:'Ironclad',  emoji:'⚙️', hp:2400, dmg:280, spd:26,  range:210, atk:1.9,  cost:160,reward:12,tier:4, color:'#445566', shape:'g'},
+  ],
+  // AGE 3: MODERN
+  [
+    {name:'Marine',    emoji:'🪖', hp:480,  dmg:80,  spd:75,  range:180, atk:0.7,  cost:16, reward:8, tier:0, color:'#405060', shape:'r'},
+    {name:'Sniper',    emoji:'🎯', hp:320,  dmg:140, spd:54,  range:260, atk:1.7,  cost:32, reward:8, tier:1, color:'#304050', shape:'r'},
+    {name:'Commando',  emoji:'⚔️', hp:1120, dmg:140, spd:62,  range:48,  atk:0.9,  cost:64, reward:16,tier:2, color:'#506070', shape:'m'},
+    {name:'Chopper',   emoji:'🚁', hp:2800, dmg:320, spd:50,  range:210, atk:1.35, cost:160,reward:16,tier:3, color:'#405050', shape:'h'},
+    {name:'Mech Titan',emoji:'🤖', hp:5000, dmg:560, spd:30,  range:90,  atk:1.7,  cost:320,reward:24,tier:4, color:'#304060', shape:'g'},
+  ],
+  // AGE 4: HIGH-TECH
+  [
+    {name:'Nano Trooper',emoji:'💫',hp:960,  dmg:160, spd:82,  range:200, atk:0.65, cost:32, reward:16,tier:0, color:'#006888', shape:'r'},
+    {name:'War Drone',  emoji:'🛸', hp:640,  dmg:140, spd:72,  range:270, atk:1.1,  cost:64, reward:16,tier:1, color:'#004870', shape:'r'},
+    {name:'Cyborg',     emoji:'🤖', hp:2240, dmg:280, spd:66,  range:58,  atk:0.85, cost:128,reward:32,tier:2, color:'#0080a8', shape:'m'},
+    {name:'Plasma Mech',emoji:'⚡', hp:5600, dmg:640, spd:54,  range:230, atk:1.25, cost:320,reward:32,tier:3, color:'#004888', shape:'h'},
+    {name:'AI Overlord',emoji:'🌐', hp:9800, dmg:1100,spd:33,  range:110, atk:1.6,  cost:640,reward:48,tier:4, color:'#00bbdd', shape:'g'},
+  ],
+  // AGE 5: SPACE
+  [
+    {name:'Star Marine',emoji:'🚀', hp:1920, dmg:320, spd:86,  range:220, atk:0.6,  cost:64, reward:32,tier:0, color:'#7040c8', shape:'r'},
+    {name:'Pulsar',     emoji:'✨', hp:1280, dmg:280, spd:76,  range:290, atk:1.0,  cost:128,reward:32,tier:1, color:'#5028a0', shape:'r'},
+    {name:'Void Walker',emoji:'👾', hp:4480, dmg:560, spd:72,  range:65,  atk:0.8,  cost:256,reward:64,tier:2, color:'#8848d0', shape:'m'},
+    {name:'Nova Ship',  emoji:'🛸', hp:11200,dmg:1280,spd:62,  range:260, atk:1.15, cost:640,reward:64,tier:3, color:'#6038b8', shape:'h'},
+    {name:'Star God',   emoji:'🌟', hp:19600,dmg:2200,spd:38,  range:130, atk:1.5,  cost:1280,reward:96,tier:4,color:'#c850ff', shape:'g'},
+  ],
+];
+
+const SPELLS = [
+  {name:'Lightning',icon:'⚡',desc:'Strikes 5 enemies',    cost:30, baseCd:15, effect:'lightning'},
+  {name:'Blizzard', icon:'❄️',desc:'Slows all enemies 5s', cost:25, baseCd:20, effect:'blizzard'},
+  {name:'Fireball', icon:'🔥',desc:'Area burst damage',    cost:20, baseCd:12, effect:'fireball'},
+  {name:'Heal',     icon:'💚',desc:'Restore 12% base HP',  cost:35, baseCd:25, effect:'heal'},
+  {name:'Meteor',   icon:'☄️',desc:'Massive area strike',  cost:50, baseCd:35, effect:'meteor'},
+  {name:'Shield',   icon:'🛡️',desc:'Halves dmg for 5s',   cost:40, baseCd:30, effect:'shield'},
+];
+
+const UPGRADES = [
+  {id:'gold_income', name:'Gold Income +1/sec',    desc:'+1 passive gold/sec per level (1 base + upgrades, max +15/sec)', maxLv:14, baseCost:50,  mult:1.8},
+  {id:'atk_speed',   name:'Attack Speed +5%',      desc:'All your units attack faster',                maxLv:10, baseCost:80,  mult:2.0},
+  {id:'unit_hp',     name:'Unit HP +10%',           desc:'All your units have more health',             maxLv:10, baseCost:80,  mult:2.0},
+  {id:'unit_dmg',    name:'Unit Damage +8%',        desc:'All your units deal more damage',             maxLv:10, baseCost:80,  mult:2.0},
+  {id:'base_armor',  name:'Base Armor +8%',         desc:'Your base takes less damage',                 maxLv:10, baseCost:60,  mult:1.7},
+  {id:'spell_cd',    name:'Spell Cooldown -8%',     desc:'Spells recharge faster',                      maxLv:10, baseCost:70,  mult:1.8},
+  {id:'spell_dmg',   name:'Spell Damage +15%',      desc:'All spells hit harder',                       maxLv:10, baseCost:70,  mult:1.9},
+  {id:'gold_kill',   name:'Gold per Kill +1',        desc:'Each enemy killed drops extra gold',          maxLv:10, baseCost:100, mult:2.2},
+  {id:'pop_cap',     name:'Pop Cap +2',              desc:'Field 2 more units at once',                  maxLv:10, baseCost:90,  mult:2.0},
+  {id:'spawn_rate',  name:'Train Speed +8%',         desc:'Units become available faster (cooldown)',    maxLv:5,  baseCost:120, mult:2.5},
+];
+
+let G = {
+  age:0, gold:25, enemyGold:25, exp:0, expNeeded:100,
+  playerBase:{hp:1000,maxHp:1000},
+  enemyBase:{hp:1000,maxHp:1000},
+  units:[], particles:[], floatTexts:[],
+  spellCDs:new Array(SPELLS.length).fill(0),
+  upgLvl:{gold_income:0,atk_speed:0,unit_hp:0,unit_dmg:0,base_armor:0,spell_cd:0,spell_dmg:0,gold_kill:0,pop_cap:0,spawn_rate:0},
+  enemyUpgLvl:{gold_income:0,atk_speed:0,unit_hp:0,unit_dmg:0,base_armor:0,pop_cap:0},
+  popCap:30, enemyPopCap:30, playerPop:0, enemyPop:0,
+  diff:'medium', running:false, paused:false,
+  aiTimer:0, aiCd:4, aiUpgTimer:10,
+  passiveTimer:0,
+  shieldActive:0,
+  t:0, lastTime:0,
+  effects:[],
+  stars:[],
+};
+
+// Generate stars for space age
+for(let i=0;i<120;i++) G.stars.push({x:Math.random(),y:Math.random()*0.7,r:Math.random()*1.5+0.3,twinkle:Math.random()*Math.PI*2});
+
+function getPlayerGoldPerSec(){ return 1 + G.upgLvl.gold_income; }
+
+function getEnemyGoldPerSec(){
+  const base = 1 + (G.enemyUpgLvl.gold_income || 0);
+  const mult = {easy:1, medium:1, hard:1.3}[G.diff];
+  return base * mult;
+}
+
+function syncEnemyPopCap(){
+  const bonus = {easy:-6, medium:0, hard:2}[G.diff];
+  G.enemyPopCap = Math.max(10, 30 + G.enemyUpgLvl.pop_cap * 2 + bonus);
+}
+
+function getEnemyUpgCost(u){
+  return Math.round(u.baseCost * Math.pow(u.mult, G.enemyUpgLvl[u.id] || 0));
+}
+
+function totalUpgLevels(lvl){
+  return Object.values(lvl).reduce((a,b)=>a+b,0);
+}
+
+const ENEMY_UPG_IDS = ['gold_income','unit_dmg','unit_hp','pop_cap','atk_speed','base_armor'];
+
+function tryEnemyUpgrade(){
+  if(G.diff==='easy'&&Math.random()>0.35)return;
+  const order={easy:['gold_income','unit_hp'],medium:['gold_income','unit_dmg','unit_hp','pop_cap'],hard:['gold_income','unit_dmg','unit_hp','pop_cap','atk_speed','base_armor']}[G.diff];
+  const playerTot=totalUpgLevels(G.upgLvl);
+  const enemyTot=totalUpgLevels(G.enemyUpgLvl);
+  if(G.diff==='hard'&&enemyTot<playerTot-1)order.unshift('unit_dmg','unit_hp');
+  for(const id of order){
+    const u=UPGRADES.find(x=>x.id===id);
+    if(!u||!ENEMY_UPG_IDS.includes(id))continue;
+    const lv=G.enemyUpgLvl[id]||0;
+    if(lv>=u.maxLv)continue;
+    const capLv=G.diff==='hard'?Math.min(u.maxLv,G.upgLvl[id]+2):G.diff==='medium'?Math.min(u.maxLv,G.upgLvl[id]+1):Math.min(u.maxLv,4);
+    if(lv>=capLv)continue;
+    const cost=getEnemyUpgCost(u);
+    const reserve=G.diff==='hard'?12:22;
+    if(G.enemyGold<cost+reserve)continue;
+    G.enemyGold-=cost;
+    G.enemyUpgLvl[id]=lv+1;
+    if(id==='pop_cap')syncEnemyPopCap();
+    G._eaciEvent='enemy_upgrade';
+    G._eaciMeta={upgradeName:u.name,upgradeId:id};
+    return;
+  }
+}
+
+function selDiff(d){
+  G.diff=d;
+  document.querySelectorAll('.diff-btn').forEach(b=>b.classList.remove('sel'));
+  event.target.classList.add('sel');
+}
+
+function startGame(){
+  document.getElementById('main-menu').style.display='none';
+  G.running=true;
+  startBackgroundMusic();
+  G.gold=25;
+  G.enemyGold=25;
+  G.enemyUpgLvl={gold_income:0,atk_speed:0,unit_hp:0,unit_dmg:0,base_armor:0,pop_cap:0};
+  syncEnemyPopCap();
+  G.aiCd={easy:6,medium:3.8,hard:2.2}[G.diff];
+  eaciBanterTimer=10+Math.random()*20;
+  applyAge(0,true);
+  renderUnitButtons();
+  renderSpells();
+  if(veilEmbedded){
+    postToVeilParent({type:'aot:session-start',diff:G.diff,companion:eaciCompanion.who||'caelum'});
+    requestVeilCompanion();
+  }
+  requestAnimationFrame(loop);
+}
+
+function applyAge(age, firstTime){
+  G.age=age;
+  const mult=Math.pow(2,age);
+  const hpMult=1+G.upgLvl.base_armor*0.12;
+  const eHpMult=1+(G.enemyUpgLvl.base_armor||0)*0.12;
+  G.playerBase.maxHp=1000*mult*hpMult;
+  if(firstTime) G.playerBase.hp=G.playerBase.maxHp;
+  else G.playerBase.hp=Math.min(G.playerBase.maxHp, G.playerBase.hp*(mult/Math.pow(2,age-1)));
+  G.enemyBase.maxHp=1000*mult*eHpMult;
+  G.enemyBase.hp=G.enemyBase.maxHp;
+  G.expNeeded=100*mult;
+  G.exp=0;
+  G.popCap=30+G.upgLvl.pop_cap*2;
+  syncEnemyPopCap();
+  G.aiTimer=0;
+  if(!firstTime){
+    const a=AGES[age];
+    G._eaciEvent='age_up';
+    showBanner(a.name,a.sub);
+    notify('⚔️ Entered '+a.name+'! New units unlocked!');
+  }
+  renderUnitButtons();
+  renderSpells();
+  updateUI();
+}
+
+function showBanner(title,sub){
+  const b=document.getElementById('age-banner');
+  document.getElementById('ab-title').textContent=title;
+  document.getElementById('ab-sub').textContent=sub;
+  b.style.display='block';b.style.opacity='1';
+  setTimeout(()=>{b.style.opacity='0';setTimeout(()=>b.style.display='none',600)},2800);
+}
+
+function notify(msg){
+  const n=document.getElementById('notification');
+  n.textContent=msg;n.style.opacity='1';
+  clearTimeout(n._t);
+  n._t=setTimeout(()=>n.style.opacity='0',2800);
+}
+
+function getUpgCost(u){ return Math.round(u.baseCost*Math.pow(u.mult,G.upgLvl[u.id])); }
+
+function openShop(){
+  const wasPaused=G.paused;
+  if(!G.paused&&G.running) G.paused=true;
+  document.getElementById('pause-overlay').style.display='none';
+  document.getElementById('shop-gold').textContent=Math.floor(G.gold);
+  const list=document.getElementById('upg-list');
+  list.innerHTML='';
+  UPGRADES.forEach(u=>{
+    const lv=G.upgLvl[u.id];
+    const cost=getUpgCost(u);
+    const maxed=lv>=u.maxLv;
+    const canAfford=G.gold>=cost&&!maxed;
+    const row=document.createElement('div');
+    row.className='upg-row';
+    row.innerHTML=`
+      <div>
+        <div class="upg-name">${u.name}</div>
+        <div class="upg-desc">${u.desc}</div>
+      </div>
+      <div class="upg-right">
+        <span class="upg-lv">Lv ${lv}/${u.maxLv}</span>
+        ${maxed
+          ? '<span class="max-badge">MAX</span>'
+          : `<span class="upg-cost">💰${cost}</span><button onclick="buyUpg('${u.id}')" ${canAfford?'':'disabled'}>Upgrade</button>`
+        }
+      </div>`;
+    list.appendChild(row);
+  });
+  document.getElementById('shop-panel').style.display='flex';
+}
+
+function buyUpg(id){
+  const u=UPGRADES.find(x=>x.id===id);
+  if(!u)return;
+  const cost=getUpgCost(u);
+  if(G.gold<cost||G.upgLvl[id]>=u.maxLv)return;
+  G.gold-=cost;
+  G.upgLvl[id]++;
+  if(id==='pop_cap'){ G.popCap=30+G.upgLvl.pop_cap*2; syncEnemyPopCap(); }
+  openShop();
+}
+
+function closeShop(){
+  document.getElementById('shop-panel').style.display='none';
+  if(G.paused){G.paused=false;requestAnimationFrame(loop);}
+}
+
+function togglePause(){
+  if(document.getElementById('shop-panel').style.display!=='none'){closeShop();return;}
+  G.paused=!G.paused;
+  document.getElementById('pause-overlay').style.display=G.paused?'flex':'none';
+  document.getElementById('pause-btn').textContent=G.paused?'▶ Resume':'⏸ Pause';
+  if(!G.paused) requestAnimationFrame(loop);
+}
+
+function renderUnitButtons(){
+  const row=document.getElementById('unit-row');
+  row.innerHTML='';
+  const defs=UNIT_DEFS[G.age];
+  const tierNames=['Cheap','Ranged','Medium','Heavy','GOD'];
+  defs.forEach((u,i)=>{
+    const btn=document.createElement('div');
+    btn.className='unit-btn';
+    btn.id='ubtn-'+i;
+    btn.innerHTML=`
+      <div class="u-tier">${UNIT_ROLES[u.shape]||tierNames[u.tier]}</div>
+      <div class="u-name">${u.emoji} ${u.name}</div>
+      <div class="u-cost">💰${u.cost}</div>
+      <div class="u-stats">HP:${u.hp} DMG:${u.dmg}</div>
+      <div class="u-stats" style="color:#a3e635">▶${STRONG_VS[u.shape]}${WEAK_VS[u.shape]!=='—'?' · ◀'+WEAK_VS[u.shape]:''}</div>`;
+    btn.onclick=()=>spawnUnit(i,true);
+    row.appendChild(btn);
+  });
+}
+
+function renderSpells(){
+  const row=document.getElementById('spells-row');
+  row.innerHTML='<span style="font-size:10px;color:#6b7280;margin-right:4px;white-space:nowrap">SPELLS:</span>';
+  SPELLS.forEach((s,i)=>{
+    const btn=document.createElement('button');
+    btn.className='spell-btn';
+    btn.id='spell-'+i;
+    btn.innerHTML=`${s.icon} ${s.name}<div style="font-size:9px;color:#888">${s.cost}g</div>`;
+    btn.onclick=()=>castSpell(i);
+    row.appendChild(btn);
+  });
+}
+
+function spawnUnit(idx,isPlayer,forcedAge){
+  const age=forcedAge!==undefined?forcedAge:G.age;
+  const defs=UNIT_DEFS[age];
+  const def=defs[idx];
+  const popCount=G.units.filter(u=>u.isPlayer===isPlayer).length;
+  const popCap=isPlayer?G.popCap:G.enemyPopCap;
+  if(popCount>=popCap)return;
+  if(isPlayer){
+    if(G.gold<def.cost)return;
+    G.gold-=def.cost;
+    G.exp=Math.min(G.exp+1,G.expNeeded*2);
+  }else{
+    if(G.enemyGold<def.cost)return;
+    G.enemyGold-=def.cost;
+  }
+  const eu=G.enemyUpgLvl;
+  const hardStat={easy:0,medium:0,hard:0.08}[G.diff];
+  const hpM=isPlayer?(1+G.upgLvl.unit_hp*0.10):(1+eu.unit_hp*0.10+hardStat);
+  const dmgM=isPlayer?(1+G.upgLvl.unit_dmg*0.08):(1+eu.unit_dmg*0.08+hardStat);
+  const atkM=isPlayer?1/(1+G.upgLvl.atk_speed*0.05):1/(1+(eu.atk_speed||0)*0.05);
+  const diffSpd={easy:0.8,medium:1,hard:1.25}[G.diff];
+  const unit={
+    id:Math.random()*99999|0,
+    defIdx:idx, age:age,
+    isPlayer,
+    x:isPlayer?PBX()+SPAWN_OFF():EBX()-SPAWN_OFF(),
+    y:0,
+    hp:def.hp*hpM, maxHp:def.hp*hpM,
+    dmg:def.dmg*dmgM,
+    spd:def.spd*(isPlayer?1:diffSpd),
+    range:def.range,
+    atkSpd:def.atk*(isPlayer?atkM:(atkM)),
+    atkTimer:Math.random()*def.atk,
+    state:'walk',
+    color:def.color, shape:def.shape,
+    slow:0, shield:0,
+    tier:def.tier, reward:def.reward,
+    atkAnimT:0, walkT:Math.random()*Math.PI*2,
+    name:def.name,
+  };
+  G.units.push(unit);
+  updatePop();
+}
+
+function updatePop(){
+  G.playerPop=G.units.filter(u=>u.isPlayer).length;
+  G.enemyPop=G.units.filter(u=>!u.isPlayer).length;
+}
+
+function castSpell(idx){
+  if(idx>=SPELLS.length)return;
+  const s=SPELLS[idx];
+  if(G.gold<s.cost||G.spellCDs[idx]>0)return;
+  const cdMult=Math.max(0.2,1-G.upgLvl.spell_cd*0.08);
+  G.gold-=s.cost;
+  G.spellCDs[idx]=s.baseCd*cdMult;
+  const dmgM=1+G.upgLvl.spell_dmg*0.15;
+  const enemies=G.units.filter(u=>!u.isPlayer);
+  switch(s.effect){
+    case 'lightning':{
+      const targets=enemies.sort(()=>Math.random()-0.5).slice(0,5);
+      targets.forEach(t=>{
+        const d=Math.floor((200+G.age*100)*dmgM);
+        t.hp-=d;
+        addFloat(t.x,t.y-30,'⚡'+d,'#ffff44');
+        addParts(t.x,t.y-10,'#ffffa0',10);
+      });
+      G.effects.push({type:'lightning',t:0.7});
+      break;
+    }
+    case 'blizzard':{
+      enemies.forEach(u=>u.slow=5);
+      G.effects.push({type:'blizzard',t:5});
+      addFloat(GW()/2,GROUND()-60,'❄️ BLIZZARD!','#88ddff');
+      break;
+    }
+    case 'fireball':{
+      const cx=GW()*0.5+Math.random()*200-100;
+      enemies.filter(u=>Math.abs(u.x-cx)<110).forEach(u=>{
+        const d=Math.floor((160+G.age*80)*dmgM);
+        u.hp-=d;
+        addFloat(u.x,u.y-25,'🔥'+d,'#ff8800');
+      });
+      addParts(cx,GROUND(),'#ff6600',20);
+      G.effects.push({type:'fireball',t:0.7,x:cx});
+      break;
+    }
+    case 'heal':{
+      const h=G.playerBase.maxHp*0.12;
+      G.playerBase.hp=Math.min(G.playerBase.maxHp,G.playerBase.hp+h);
+      addFloat(PBX(),GROUND()-90,'💚+'+Math.floor(h),'#22c55e');
+      G.effects.push({type:'heal',t:1});
+      break;
+    }
+    case 'meteor':{
+      const cx=GW()*0.55+Math.random()*150-75;
+      enemies.filter(u=>Math.abs(u.x-cx)<150).forEach(u=>{
+        const d=Math.floor((400+G.age*200)*dmgM);
+        u.hp-=d;
+        addFloat(u.x,u.y-30,'☄️'+d,'#ff4400');
+      });
+      addParts(cx,GROUND(),'#ff2200',30);
+      G.effects.push({type:'meteor',t:1.0,x:cx});
+      break;
+    }
+    case 'shield':{
+      G.shieldActive=5;
+      addFloat(PBX(),GROUND()-90,'🛡️ SHIELD!','#60a5fa');
+      G.effects.push({type:'shield',t:5});
+      break;
+    }
+  }
+}
+
+function addFloat(x,y,text,color){
+  const el=document.createElement('div');
+  el.className='float-txt';
+  el.style.cssText=`left:${x}px;top:${y}px;color:${color}`;
+  el.textContent=text;
+  document.getElementById('ui').appendChild(el);
+  setTimeout(()=>el.remove(),1400);
+}
+
+function addParts(x,y,color,n){
+  for(let i=0;i<n;i++){
+    G.particles.push({
+      x,y,
+      vx:(Math.random()-0.5)*90,
+      vy:-Math.random()*70-15,
+      life:1,maxLife:1,
+      color,r:Math.random()*3+1,
+    });
+  }
+}
+
+function pickStrategicUnitIdx(){
+  const defs=UNIT_DEFS[G.age];
+  const maxIdx=G.diff==='easy'?2:G.diff==='medium'?4:4;
+  const pUnits=G.units.filter(u=>u.isPlayer);
+  const dom=dominantShape(shapeCounts(pUnits));
+  const wantShape=counterShapeFor(dom.shape);
+  const counterChance={easy:0.4,medium:0.72,hard:0.88}[G.diff];
+  const useCounter=dom.count>=2&&Math.random()<counterChance;
+
+  if(useCounter){
+    let bestIdx=-1,bestTier=-1;
+    for(let i=0;i<=maxIdx;i++){
+      if(defs[i].shape!==wantShape)continue;
+      if(G.enemyGold<defs[i].cost)continue;
+      if(defs[i].tier>bestTier){bestTier=defs[i].tier;bestIdx=i;}
+    }
+    if(bestIdx>=0){
+      G._eaciEvent='counter_spawn';
+      G._eaciMeta={counterRole:UNIT_ROLES[wantShape],vsRole:UNIT_ROLES[dom.shape],unitName:defs[bestIdx].name};
+      return bestIdx;
+    }
+  }
+
+  const affordable=[];
+  for(let i=0;i<=maxIdx;i++)if(G.enemyGold>=defs[i].cost)affordable.push(i);
+  if(!affordable.length)return 0;
+  if(G.diff==='hard'&&G.enemyGold>defs[3].cost*1.2&&affordable.includes(3))return 3;
+  return affordable[Math.floor(Math.random()*affordable.length)];
+}
+
+function aiTick(dt){
+  G.aiUpgTimer-=dt;
+  if(G.aiUpgTimer<=0){
+    G.aiUpgTimer={easy:16,medium:11,hard:7}[G.diff]+Math.random()*5;
+    tryEnemyUpgrade();
+  }
+  G.aiTimer-=dt;
+  if(G.aiTimer>0)return;
+  const diffM={easy:1.6,medium:1.0,hard:0.65}[G.diff];
+  G.aiTimer=G.aiCd*diffM*(0.75+Math.random()*0.5);
+  const idx=pickStrategicUnitIdx();
+  const def=UNIT_DEFS[G.age][idx];
+  if(G.enemyPop<G.enemyPopCap && G.enemyGold>=def.cost) spawnUnit(idx,false);
+}
+
+function loop(ts){
+  if(!G.running)return;
+  if(G.paused){G.lastTime=ts;return;}
+  const dt=Math.min((ts-G.lastTime)/1000,0.1);
+  G.lastTime=ts;
+  G.t+=dt;
+  update(dt);
+  draw();
+  updateUI();
+  requestAnimationFrame(loop);
+}
+
+function update(dt){
+  G.passiveTimer+=dt;
+  if(G.passiveTimer>=1){
+    G.passiveTimer-=1;
+    const pGold=getPlayerGoldPerSec();
+    G.gold+=pGold;
+    G.enemyGold+=getEnemyGoldPerSec();
+    if(pGold>0) addFloat(PBX()+30,GROUND()-60,'+'+pGold+'g','#ffd700');
+  }
+  SPELLS.forEach((_,i)=>{if(G.spellCDs[i]>0)G.spellCDs[i]=Math.max(0,G.spellCDs[i]-dt);});
+  if(G.shieldActive>0)G.shieldActive=Math.max(0,G.shieldActive-dt);
+  G.effects.forEach(e=>e.t-=dt);
+  G.effects=G.effects.filter(e=>e.t>0);
+  aiTick(dt);
+  tickEaciBanter(dt);
+  const pUnits=G.units.filter(u=>u.isPlayer);
+  const eUnits=G.units.filter(u=>!u.isPlayer);
+  G.units.forEach(u=>{
+    if(u.slow>0)u.slow=Math.max(0,u.slow-dt);
+    const spdMult=u.slow>0?0.22:1;
+    const spd=u.spd*spdMult;
+    const enemies=u.isPlayer?eUnits:pUnits;
+    const base=u.isPlayer?G.enemyBase:G.playerBase;
+    const baseX=u.isPlayer?EBX():PBX();
+    u.walkT+=dt*4;
+    let target=null,minD=Infinity;
+    enemies.forEach(e=>{const d=Math.abs(e.x-u.x);if(d<minD){minD=d;target=e;}});
+    const baseDist=Math.abs(baseX-u.x);
+    if(target&&minD<=u.range){
+      u.state='attack';
+      u.atkTimer-=dt;
+      if(u.atkTimer<=0){
+        u.atkTimer=u.atkSpd;
+        u.atkAnimT=0.25;
+        const cMult=getCounterMult(u.shape,target.shape);
+        const dmg=Math.max(1,Math.floor(u.dmg*cMult));
+        target.hp-=dmg;
+        if(cMult>1.1)addFloat(target.x,target.y-42,'▶×'+cMult.toFixed(2),'#a3e635');
+        addParts(target.x,target.y-15,u.color,4);
+      }
+    }else if(!target&&baseDist<=u.range+35){
+      u.state='attack';
+      u.atkTimer-=dt;
+      if(u.atkTimer<=0){
+        u.atkTimer=u.atkSpd;
+        let dmgApplied=u.dmg;
+        if(!u.isPlayer&&G.shieldActive>0)dmgApplied*=0.5;
+        else if(u.isPlayer)dmgApplied/=1+(G.enemyUpgLvl.base_armor||0)*0.12;
+        else dmgApplied/=1+G.upgLvl.base_armor*0.12;
+        base.hp=Math.max(0,base.hp-dmgApplied);
+        addParts(baseX,GROUND()-30,'#ff4444',4);
+      }
+    }else{
+      u.state='walk';
+      u.x+=u.isPlayer?spd*dt:-spd*dt;
+    }
+    if(u.atkAnimT>0)u.atkAnimT=Math.max(0,u.atkAnimT-dt);
+  });
+  // Handle deaths
+  const dead=G.units.filter(u=>u.hp<=0);
+  dead.forEach(u=>{
+    if(!u.isPlayer){
+      const goldEarned=u.reward+G.upgLvl.gold_kill;
+      G.gold+=goldEarned;
+      G.exp=Math.min(G.exp+2,G.expNeeded*2);
+      addFloat(u.x,u.y-35,'+'+goldEarned+'g','#ffd700');
+    }
+    addParts(u.x,u.y-10,'#ff2200',6);
+  });
+  G.units=G.units.filter(u=>u.hp>0);
+  updatePop();
+  // Particles
+  G.particles.forEach(p=>{
+    p.x+=p.vx*dt; p.y+=p.vy*dt;
+    p.vy+=80*dt; p.life-=dt*1.6;
+  });
+  G.particles=G.particles.filter(p=>p.life>0);
+  // Age up check
+  if(G.exp>=G.expNeeded){
+    if(G.age<5){
+      G.units=G.units.filter(u=>u.isPlayer);
+      G.units.forEach(u=>u.x=Math.min(u.x,EBX()-60));
+      applyAge(G.age+1,false);
+    }else{
+      G.exp=G.expNeeded;
+    }
+  }
+  // Win/lose
+  if(G.playerBase.hp<=0)endGame(false);
+  if(G.enemyBase.hp<=0)endGame(true);
+}
+
+function draw(){
+  const gw=GW(),gh=GH(),gr=GROUND(),a=AGES[G.age],pt=playTop();
+  ctx.clearRect(0,0,gw,gh);
+  // Sky gradient (play area only)
+  const sky=ctx.createLinearGradient(0,pt,0,gr);
+  sky.addColorStop(0,a.sky[0]);
+  sky.addColorStop(1,a.sky[1]);
+  ctx.fillStyle=sky;
+  ctx.fillRect(0,pt,gw,gr-pt);
+  // Fill under UI with ground tone so nothing looks clipped
+  ctx.fillStyle=a.ground;
+  ctx.fillRect(0,gr,gw,gh-gr);
+  // Stars (space age)
+  if(G.age===5){
+    G.stars.forEach(s=>{
+      const tw=Math.sin(G.t*1.5+s.twinkle);
+      ctx.globalAlpha=0.4+tw*0.3;
+      ctx.fillStyle='#ffffff';
+      ctx.beginPath();
+      ctx.arc(s.x*gw,s.y*gr,s.r,0,Math.PI*2);
+      ctx.fill();
+    });
+    ctx.globalAlpha=1;
+  }
+  // Distant hills
+  ctx.fillStyle=a.hill;
+  ctx.beginPath();
+  ctx.moveTo(0,gr);
+  for(let x=0;x<=gw;x+=40){
+    const h=30+Math.sin(x*0.008)*18+Math.sin(x*0.02)*10;
+    ctx.lineTo(x,gr-h);
+  }
+  ctx.lineTo(gw,gr);ctx.closePath();ctx.fill();
+  // Ground
+  ctx.fillStyle=a.ground;
+  ctx.fillRect(0,gr,gw,gh-gr);
+  // Ground line detail
+  ctx.fillStyle='rgba(0,0,0,0.3)';
+  ctx.fillRect(0,gr,gw,2);
+  // Factory smokestacks
+  if(G.age===2){
+    ctx.fillStyle='#5a5a5a';
+    [gw*0.3,gw*0.45,gw*0.6,gw*0.72].forEach(sx=>{
+      ctx.fillRect(sx-5,gr-55,10,55);
+      // Smoke
+      ctx.globalAlpha=0.3;
+      ctx.fillStyle='#888';
+      for(let i=0;i<3;i++){
+        const off=(G.t*15+i*10)%50;
+        ctx.beginPath();ctx.arc(sx,gr-60-off,4+i*2,0,Math.PI*2);ctx.fill();
+      }
+      ctx.globalAlpha=1;ctx.fillStyle='#5a5a5a';
+    });
+  }
+  // Atmosphere / fog
+  if(a.fog){
+    ctx.fillStyle=a.fog;
+    ctx.fillRect(0,0,gw,gh);
+  }
+  // Bases
+  drawBase(G.playerBase,false,a,gw,gr);
+  drawBase(G.enemyBase,true,a,gw,gr);
+  // Units (back to front)
+  G.units.slice().sort((a,b)=>a.y-b.y).forEach(u=>drawUnit(u,gr));
+  // Particles
+  G.particles.forEach(p=>{
+    ctx.globalAlpha=Math.max(0,p.life/p.maxLife);
+    ctx.fillStyle=p.color;
+    ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();
+  });
+  ctx.globalAlpha=1;
+  // Spell effects
+  G.effects.forEach(e=>{
+    const a=Math.min(e.t,1);
+    if(e.type==='blizzard'){
+      ctx.fillStyle=`rgba(180,230,255,${Math.min(a,0.18)})`;
+      ctx.fillRect(0,0,gw,gh);
+      ctx.fillStyle='rgba(220,245,255,0.65)';
+      for(let i=0;i<50;i++){
+        const sx=((i*73+G.t*120)%gw);
+        const sy=((i*47+G.t*90)%(gr*0.9));
+        ctx.fillRect(sx,sy,1.5,6);
+      }
+    }
+    if(e.type==='lightning'){
+      ctx.save();
+      ctx.strokeStyle=`rgba(255,255,120,${a*0.9})`;
+      ctx.lineWidth=2.5;
+      for(let i=0;i<4;i++){
+        ctx.beginPath();
+        let lx=gw*0.3+Math.random()*gw*0.5;
+        ctx.moveTo(lx,0);
+        for(let j=0;j<6;j++){lx+=Math.random()*30-15;ctx.lineTo(lx,j*(gr/6));}
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+    if(e.type==='fireball'&&e.x){
+      const r=100*(1-Math.pow(1-e.t/0.7,0.5));
+      ctx.globalAlpha=e.t/0.7*0.7;
+      const fg=ctx.createRadialGradient(e.x,gr,0,e.x,gr,r);
+      fg.addColorStop(0,'rgba(255,220,0,1)');
+      fg.addColorStop(0.5,'rgba(255,80,0,0.8)');
+      fg.addColorStop(1,'rgba(255,0,0,0)');
+      ctx.fillStyle=fg;
+      ctx.beginPath();ctx.arc(e.x,gr,r,0,Math.PI*2);ctx.fill();
+      ctx.globalAlpha=1;
+    }
+    if(e.type==='meteor'&&e.x){
+      const r=140*(1-e.t/1.0);
+      ctx.globalAlpha=e.t*0.6;
+      const mg=ctx.createRadialGradient(e.x,gr,0,e.x,gr,r);
+      mg.addColorStop(0,'rgba(255,120,0,1)');
+      mg.addColorStop(0.6,'rgba(200,40,0,0.7)');
+      mg.addColorStop(1,'rgba(100,0,0,0)');
+      ctx.fillStyle=mg;
+      ctx.beginPath();ctx.arc(e.x,gr,r,0,Math.PI*2);ctx.fill();
+      ctx.globalAlpha=1;
+    }
+    if(e.type==='shield'){
+      ctx.globalAlpha=Math.min(a,0.4)*0.5;
+      ctx.fillStyle='rgba(100,160,255,1)';
+      ctx.fillRect(0,0,gw,gh);
+      ctx.globalAlpha=1;
+    }
+  });
+}
+
+function drawBase(base,isEnemy,a,gw,gr){
+  const x=isEnemy?EBX():PBX();
+  const dims=baseDims();
+  const bw=dims.bw;
+  const bh=dims.bh;
+  const bx=x-bw/2;
+  const by=gr-bh;
+  const accentCol=isEnemy?'#cc2200':a.accent;
+  const winW=Math.max(12,Math.floor(bw*0.17));
+  const winH=Math.max(10,Math.floor(bh*0.11));
+  const labelSize=Math.max(11,Math.floor(bh*0.045));
+  const barH=Math.max(6,Math.floor(bh*0.04));
+  // Main structure
+  ctx.fillStyle=isEnemy?'#2a0808':'#181818';
+  ctx.fillRect(bx,by,bw,bh);
+  // Age-based detail
+  if(G.age<=1){
+    // Wooden palisade look
+    for(let i=0;i<5;i++){
+      ctx.fillStyle=isEnemy?'#5a1010':'#4a3020';
+      ctx.fillRect(bx+i*(bw/5),by,bw/5-1,bh);
+    }
+  }else if(G.age===2||G.age===3){
+    // Concrete/bunker
+    ctx.fillStyle=isEnemy?'#3a1010':'#2a2a2a';
+    ctx.fillRect(bx+5,by+5,bw-10,20);
+    ctx.fillRect(bx+5,by+bh-25,bw-10,20);
+  }else if(G.age===4||G.age===5){
+    // Tech grid lines
+    ctx.strokeStyle=accentCol+'44';ctx.lineWidth=1;
+    for(let i=0;i<4;i++){ctx.beginPath();ctx.moveTo(bx,by+i*(bh/4));ctx.lineTo(bx+bw,by+i*(bh/4));ctx.stroke();}
+    for(let i=0;i<3;i++){ctx.beginPath();ctx.moveTo(bx+i*(bw/3),by);ctx.lineTo(bx+i*(bw/3),by+bh);ctx.stroke();}
+  }
+  // Border
+  ctx.strokeStyle=accentCol;ctx.lineWidth=2.5;
+  ctx.strokeRect(bx,by,bw,bh);
+  // Glow for high-tech/space
+  if(G.age>=4){
+    ctx.shadowColor=accentCol;ctx.shadowBlur=12;
+    ctx.strokeRect(bx,by,bw,bh);
+    ctx.shadowBlur=0;
+  }
+  // Windows
+  const wc=isEnemy?'#ff6644':'#aaddff';
+  ctx.fillStyle=wc;
+  ctx.fillRect(bx+Math.floor(bw*0.14),by+Math.floor(bh*0.12),winW,winH);
+  ctx.fillRect(bx+bw-Math.floor(bw*0.14)-winW,by+Math.floor(bh*0.12),winW,winH);
+  if(bh>100){ctx.fillRect(bx+Math.floor(bw*0.14),by+Math.floor(bh*0.28),winW,winH);ctx.fillRect(bx+bw-Math.floor(bw*0.14)-winW,by+Math.floor(bh*0.28),winW,winH);}
+  // HP bar above base
+  const bpct=base.hp/base.maxHp;
+  const barW=bw+14;
+  const barY=by-Math.floor(barH*2.2);
+  ctx.fillStyle='#111';
+  ctx.fillRect(x-barW/2,barY,barW,barH);
+  ctx.fillStyle=isEnemy
+    ?`hsl(${bpct*10},90%,45%)`
+    :`hsl(${90+bpct*40},80%,40%)`;
+  ctx.fillRect(x-barW/2,barY,barW*bpct,barH);
+  ctx.strokeStyle='#444';ctx.lineWidth=1;
+  ctx.strokeRect(x-barW/2,barY,barW,barH);
+  // Label
+  ctx.font='bold '+labelSize+'px Segoe UI';
+  ctx.fillStyle=isEnemy?'#ff9988':'#99ddaa';
+  ctx.textAlign='center';
+  ctx.fillText(isEnemy?'ENEMY BASE':'YOUR BASE',x,barY-4);
+  ctx.textAlign='left';
+  // Shield indicator
+  if(!isEnemy&&G.shieldActive>0){
+    ctx.strokeStyle='#60a5fa';ctx.lineWidth=3;ctx.setLineDash([4,3]);
+    ctx.strokeRect(bx-4,by-4,bw+8,bh+8);
+    ctx.setLineDash([]);
+  }
+}
+
+function drawUnit(u,gr){
+  const def=UNIT_DEFS[u.age][u.defIdx];
+  const wobble=u.state==='walk'?Math.sin(u.walkT)*2.5*unitScale():0;
+  const atkOff=u.atkAnimT>0?(u.isPlayer?7:-7)*(u.atkAnimT/0.25)*unitScale():0;
+  const bx=u.x+atkOff;
+  const sc=unitScale();
+  const sH=({r:26,m:30,h:38,g:34}[u.shape]||28)*sc;
+  const sW=({r:14,m:18,h:26,g:24}[u.shape]||16)*sc;
+  const baseY=gr-4;
+  ctx.save();
+  ctx.translate(bx,baseY+wobble);
+  if(!u.isPlayer) ctx.scale(-1,1);
+  // Shadow
+  ctx.globalAlpha=0.25;
+  ctx.fillStyle='#000';
+  ctx.beginPath();ctx.ellipse(0,0,sW*0.7,Math.max(4,sc*3),0,0,Math.PI*2);ctx.fill();
+  ctx.globalAlpha=1;
+  drawShape(u,sW,sH);
+  ctx.restore();
+  // HP bar (above unit body, clear of bottom UI)
+  const bW=sW*2+6;
+  const hpPct=u.hp/u.maxHp;
+  const barH=Math.max(4,Math.floor(4*sc));
+  const barY=baseY-sH-Math.max(10,8*sc);
+  ctx.fillStyle='rgba(0,0,0,0.6)';
+  ctx.fillRect(u.x-bW/2,barY,bW,barH);
+  ctx.fillStyle=hpPct>0.55?'#22c55e':hpPct>0.28?'#f59e0b':'#ef4444';
+  ctx.fillRect(u.x-bW/2,barY,bW*hpPct,barH);
+  // Slow indicator
+  if(u.slow>0){
+    ctx.globalAlpha=0.35+Math.sin(G.t*6)*0.15;
+    ctx.strokeStyle='#88ccff';ctx.lineWidth=2;
+    ctx.beginPath();ctx.ellipse(u.x,baseY-sH/2,sW+4,sH/2+4,0,0,Math.PI*2);ctx.stroke();
+    ctx.globalAlpha=1;
+  }
+}
+
+function drawShape(u,sw,sh){
+  const c=u.color;
+  const dark=shadeColor(c,-40);
+  const light=shadeColor(c,40);
+  switch(u.shape){
+    case 'r':{ // Ranged unit - lean, agile
+      // legs
+      ctx.fillStyle=dark;
+      ctx.fillRect(-sw/2+2,-8,sw/2-2,8);ctx.fillRect(2,-8,sw/2-2,8);
+      // body
+      ctx.fillStyle=c;
+      ctx.fillRect(-sw/2,-sh+14,sw,sh-18);
+      // head
+      ctx.fillStyle=light;
+      ctx.beginPath();ctx.ellipse(0,-sh+10,sw/2-1,sh/6,0,0,Math.PI*2);ctx.fill();
+      // weapon barrel
+      ctx.fillStyle='#888';
+      ctx.fillRect(sw/2-3,-sh+20,sw/2+4,3);
+      break;
+    }
+    case 'm':{ // Melee - stocky
+      ctx.fillStyle=dark;
+      ctx.fillRect(-sw/2,-10,sw/2-1,10);ctx.fillRect(1,-10,sw/2-1,10);
+      ctx.fillStyle=c;
+      ctx.fillRect(-sw/2,-sh+12,sw,sh-16);
+      ctx.fillStyle=light;
+      ctx.beginPath();ctx.ellipse(0,-sh+9,sw/2,sh/6+1,0,0,Math.PI*2);ctx.fill();
+      // weapon
+      ctx.fillStyle='#aaa';
+      ctx.fillRect(sw/2-2,-sh+10,3,sh/2);
+      break;
+    }
+    case 'h':{ // Heavy - large, armored
+      ctx.fillStyle=dark;
+      ctx.fillRect(-sw/2+1,-12,sw-2,12);
+      ctx.fillStyle=c;
+      ctx.fillRect(-sw/2,-sh+12,sw,sh-14);
+      // armor plates
+      ctx.fillStyle=light;
+      ctx.fillRect(-sw/2+1,-sh+14,sw/3,sh/4);
+      ctx.fillRect(sw/2-sw/3-1,-sh+14,sw/3,sh/4);
+      // head
+      ctx.fillStyle=light;
+      ctx.beginPath();ctx.ellipse(0,-sh+9,sw/2,sh/6+2,0,0,Math.PI*2);ctx.fill();
+      // weapon
+      ctx.fillStyle='#999';
+      ctx.fillRect(sw/2-2,-sh+8,3,sh*0.6);
+      ctx.fillRect(sw/2-6,-sh+8,10,4);
+      break;
+    }
+    case 'g':{ // God tier - imposing with glow
+      ctx.fillStyle=dark;
+      ctx.fillRect(-sw/2,-14,sw,14);
+      ctx.fillStyle=c;
+      ctx.fillRect(-sw/2,-sh+10,sw,sh-16);
+      // ornate shoulders
+      ctx.fillStyle=light;
+      ctx.fillRect(-sw/2-2,-sh+12,sw/4,sh/5);
+      ctx.fillRect(sw/4,-sh+12,sw/4+2,sh/5);
+      // large head/helm
+      ctx.fillStyle=light;
+      ctx.beginPath();ctx.ellipse(0,-sh+9,sw/2+1,sh/5+2,0,0,Math.PI*2);ctx.fill();
+      // aura when attacking
+      if(u.atkAnimT>0){
+        ctx.globalAlpha=u.atkAnimT*3;
+        ctx.fillStyle=u.color;
+        ctx.beginPath();ctx.arc(0,-sh/2,sw*1.4*u.atkAnimT/0.25,0,Math.PI*2);ctx.fill();
+        ctx.globalAlpha=1;
+      }
+      // crown/ornament
+      ctx.fillStyle='#ffd700';
+      ctx.fillRect(-4,-sh+3,3,6);ctx.fillRect(1,-sh+1,3,8);ctx.fillRect(6,-sh+3,3,6);
+      break;
+    }
+  }
+}
+
+function shadeColor(col,amt){
+  try{
+    const n=parseInt(col.replace('#',''),16);
+    const r=Math.max(0,Math.min(255,(n>>16)+amt));
+    const g=Math.max(0,Math.min(255,((n>>8)&0xff)+amt));
+    const b=Math.max(0,Math.min(255,(n&0xff)+amt));
+    return '#'+(r<<16|g<<8|b).toString(16).padStart(6,'0');
+  }catch(e){return col;}
+}
+
+function updateUI(){
+  const a=AGES[G.age];
+  document.getElementById('age-name').textContent=a.name;
+  document.getElementById('age-sub').textContent='Stage '+(G.age+1)+' of 6 • '+a.sub;
+  const php=G.playerBase.hp/G.playerBase.maxHp;
+  const ehp=G.enemyBase.hp/G.enemyBase.maxHp;
+  document.getElementById('player-hp-bar').style.width=(php*100)+'%';
+  document.getElementById('enemy-hp-bar').style.width=(ehp*100)+'%';
+  document.getElementById('player-hp-txt').textContent=Math.ceil(G.playerBase.hp).toLocaleString()+'/'+Math.ceil(G.playerBase.maxHp).toLocaleString();
+  document.getElementById('enemy-hp-txt').textContent=Math.ceil(G.enemyBase.hp).toLocaleString()+'/'+Math.ceil(G.enemyBase.maxHp).toLocaleString();
+  document.getElementById('gold-val').textContent=Math.floor(G.gold).toLocaleString();
+  document.getElementById('pop-val').textContent=G.playerPop;
+  document.getElementById('pop-cap-val').textContent=G.popCap;
+  document.getElementById('exp-val').textContent=Math.floor(G.exp).toLocaleString();
+  document.getElementById('exp-need').textContent=G.expNeeded.toLocaleString();
+  document.getElementById('exp-bar').style.width=(Math.min(G.exp/G.expNeeded,1)*100)+'%';
+  // Unit buttons
+  UNIT_DEFS[G.age].forEach((u,i)=>{
+    const btn=document.getElementById('ubtn-'+i);
+    if(btn) btn.classList.toggle('cant-afford',G.gold<u.cost||G.playerPop>=G.popCap);
+  });
+  // Spell buttons
+  SPELLS.forEach((s,i)=>{
+    const btn=document.getElementById('spell-'+i);
+    if(!btn)return;
+    const oncd=G.spellCDs[i]>0;
+    const cantAfford=G.gold<s.cost;
+    btn.className='spell-btn'+(oncd||cantAfford?' on-cd':'');
+    btn.innerHTML=`${s.icon} ${s.name}${oncd
+      ?`<div style="font-size:9px;color:#f97316">${G.spellCDs[i].toFixed(1)}s</div>`
+      :`<div style="font-size:9px;color:#${cantAfford?'6b7280':'888'}">${s.cost}g</div>`}`;
+  });
+}
+
+function endGame(win){
+  G.running=false;
+  if(veilEmbedded){
+    postToVeilParent({
+      type:'aot:game-end',
+      outcome:win?'User won':'User lost',
+      detail:'Finished in '+AGES[G.age].name+' (age '+(G.age+1)+'/6) on '+G.diff+' difficulty. Upgrades: '+totalUpgLevels(G.upgLvl)+' levels.',
+      difficulty:G.diff,
+      age:G.age,
+      ageName:AGES[G.age].name,
+      companion:eaciCompanion.who||'caelum'
+    });
+  }
+  const ov=document.getElementById('result-overlay');
+  document.getElementById('result-icon').textContent=win?'🏆':'💀';
+  document.getElementById('result-title').textContent=win?'VICTORY!':'DEFEAT';
+  document.getElementById('result-title').style.color=win?'#ffd700':'#ef4444';
+  document.getElementById('result-msg').textContent=win
+    ?`Incredible! You conquered all six ages of civilization!\nFrom clubbing cavemen to space gods — you've seen it all.`
+    :`Your base was destroyed in the ${AGES[G.age].name}.\nBuy upgrades, use spells wisely, and try again!`;
+  ov.style.display='flex';
+}
+
+/* ================= BACKGROUND MUSIC ================= */
+const AOT_MUSIC_R2 = 'https://assests.eacicompanion.com/music/';
+function aotSongUrl(songName){ return AOT_MUSIC_R2 + encodeURIComponent(songName + '.mp3'); }
+const BGM_SONG_NAMES = ['Darkness Descends', 'Crystal Currents', 'Galactic Drift'];
+let bgmAudio = null, bgmIndex = 0, musicEnabled = true;
+function playBgmTrack(index){
+  if(!musicEnabled) return;
+  if(bgmAudio){ bgmAudio.pause(); bgmAudio = null; }
+  bgmIndex = index % BGM_SONG_NAMES.length;
+  bgmAudio = new Audio(aotSongUrl(BGM_SONG_NAMES[bgmIndex]));
+  bgmAudio.volume = 0.42;
+  bgmAudio.onended = () => playBgmTrack(bgmIndex + 1);
+  bgmAudio.onerror = () => playBgmTrack(bgmIndex + 1);
+  bgmAudio.play().catch(() => {});
+}
+function startBackgroundMusic(){
+  if(!musicEnabled || bgmAudio) return;
+  playBgmTrack(bgmIndex);
+}
+
+/* ================= VEIL EACI — active companion as enemy commander ================= */
+const veilEmbedded = window.parent !== window;
+let eaciCompanion = { who: 'caelum', name: 'Caelum', videoSrc: '' };
+let eaciChatOpen = false;
+let eaciChatBusy = false;
+let eaciBanterTimer = 12 + Math.random() * 10;
+
+function showEaciVeilUI(show) {
+  const on = show && veilEmbedded;
+  ['eaciAvatarWidget', 'eaciChatToggle'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = on ? '' : 'none';
+  });
+}
+
+function setEaciAvatarVideo(src) {
+  const v = document.getElementById('eaciAvatarVideo');
+  if (!v || !src) return;
+  if (v.dataset.src !== src) {
+    v.dataset.src = src;
+    v.src = src;
+    v.play().catch(() => {});
+  }
+}
+
+function applyCompanionInfo(c) {
+  if (!c) return;
+  eaciCompanion = c;
+  const name = c.name || c.who || 'Enemy';
+  const nameEl = document.getElementById('eaciAvatarName');
+  const titleEl = document.getElementById('eaciChatTitle');
+  const baseLbl = document.getElementById('enemy-base-label');
+  if (nameEl) nameEl.textContent = name;
+  if (titleEl) titleEl.textContent = name + ' — Enemy';
+  if (baseLbl) baseLbl.textContent = name + ' — Base';
+  if (c.videoSrc) setEaciAvatarVideo(c.videoSrc);
+  showEaciVeilUI(true);
+  if (!window._aotCompanionGreeted) {
+    window._aotCompanionGreeted = true;
+    appendEaciChatBubble(name + ' commands the enemy army.', 'system');
+  }
+}
+
+function appendEaciChatBubble(text, kind) {
+  const box = document.getElementById('eaciChatMessages');
+  if (!box || !text) return;
+  const div = document.createElement('div');
+  div.className = 'bubble ' + (kind || 'eaci');
+  div.textContent = text;
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+}
+
+function buildSituationSnapshot() {
+  const php = G.playerBase.hp / G.playerBase.maxHp;
+  const ehp = G.enemyBase.hp / G.enemyBase.maxHp;
+  let winning = 'even';
+  if (G.enemyPop > G.playerPop + 4 && ehp >= php - 0.05) winning = 'enemy';
+  else if (G.playerPop > G.enemyPop + 4 && php >= ehp - 0.05) winning = 'player';
+  else if (ehp - php > 0.12) winning = 'enemy';
+  else if (php - ehp > 0.12) winning = 'player';
+  const dom = dominantShape(shapeCounts(G.units.filter(u => u.isPlayer)));
+  const snap = {
+    age: G.age,
+    ageName: AGES[G.age].name,
+    playerHpPct: php,
+    enemyHpPct: ehp,
+    playerPop: G.playerPop,
+    enemyPop: G.enemyPop,
+    gold: Math.floor(G.gold),
+    enemyGold: Math.floor(G.enemyGold),
+    diff: G.diff,
+    winning,
+    event: G._eaciEvent || '',
+    meta: G._eaciMeta ? Object.assign({}, G._eaciMeta) : {},
+    dominantPlayerRole: UNIT_ROLES[dom.shape],
+    dominantPlayerCount: dom.count,
+    counterRole: UNIT_ROLES[counterShapeFor(dom.shape)],
+    playerUpgradeLvl: totalUpgLevels(G.upgLvl),
+    enemyUpgradeLvl: totalUpgLevels(G.enemyUpgLvl)
+  };
+  G._eaciEvent = '';
+  G._eaciMeta = null;
+  return snap;
+}
+
+function buildGameContextForChat() {
+  const s = buildSituationSnapshot();
+  return [
+    'Game: Ages Of Time (lane war).',
+    'Counters: Melee beats Ranged, Ranged beats Heavy, Heavy beats Melee.',
+    'You are the player; companion commands the enemy.',
+    'Age: ' + s.ageName + ' (' + (s.age + 1) + '/6).',
+    'Your base HP: ' + Math.round(s.playerHpPct * 100) + '%. Enemy base: ' + Math.round(s.enemyHpPct * 100) + '%.',
+    'Troops — you: ' + s.playerPop + ' (' + s.dominantPlayerRole + ' focus), enemy: ' + s.enemyPop + '.',
+    'Gold — you: ' + s.gold + ', enemy: ' + s.enemyGold + '.',
+    'Upgrades — you: ' + s.playerUpgradeLvl + ' lv, enemy: ' + s.enemyUpgradeLvl + ' lv.',
+    'Difficulty: ' + s.diff + '.'
+  ].join(' ');
+}
+
+function postToVeilParent(payload) {
+  if (!veilEmbedded) return;
+  try { window.parent.postMessage(payload, '*'); } catch (e) { /* ignore */ }
+}
+
+function requestVeilCompanion() {
+  postToVeilParent({ type: 'aot:init' });
+}
+
+function sendEaciChat() {
+  const input = document.getElementById('eaciChatInput');
+  if (!input || eaciChatBusy) return;
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  appendEaciChatBubble(text, 'user');
+  if (!veilEmbedded) {
+    appendEaciChatBubble('Enemy chat links to your Veil companion when played from the site menu.', 'system');
+    return;
+  }
+  eaciChatBusy = true;
+  appendEaciChatBubble('…', 'system');
+  postToVeilParent({ type: 'aot:chat', text, gameContext: buildGameContextForChat() });
+}
+
+function tickEaciBanter(dt) {
+  if (!veilEmbedded || !G.running || G.paused) return;
+  eaciBanterTimer -= dt;
+  if (eaciBanterTimer > 0) return;
+  eaciBanterTimer = 10 + Math.random() * 20;
+  postToVeilParent({
+    type: 'aot:banter',
+    situation: buildSituationSnapshot(),
+    companion: eaciCompanion.who || 'caelum'
+  });
+}
+
+function initVeilBridge() {
+  if (!veilEmbedded) return;
+  showEaciVeilUI(true);
+  requestVeilCompanion();
+
+  window.addEventListener('message', (event) => {
+    const data = event.data;
+    if (!data || typeof data.type !== 'string') return;
+    if (data.type === 'aot:companion') {
+      applyCompanionInfo(data.companion);
+      return;
+    }
+    if (data.type === 'aot:chat-reply') {
+      eaciChatBusy = false;
+      const msgs = document.getElementById('eaciChatMessages');
+      if (msgs && msgs.lastChild && msgs.lastChild.textContent === '…') msgs.removeChild(msgs.lastChild);
+      appendEaciChatBubble(data.text, 'eaci');
+      if (data.videoSrc) setEaciAvatarVideo(data.videoSrc);
+    }
+  });
+
+  const chatToggle = document.getElementById('eaciChatToggle');
+  const chatPanel = document.getElementById('eaciChatPanel');
+  const chatClose = document.getElementById('eaciChatClose');
+  const chatSend = document.getElementById('eaciChatSend');
+  const chatInput = document.getElementById('eaciChatInput');
+
+  if (chatToggle && chatPanel) {
+    chatToggle.addEventListener('click', () => {
+      eaciChatOpen = !eaciChatOpen;
+      chatPanel.classList.toggle('open', eaciChatOpen);
+      if (eaciChatOpen && chatInput) chatInput.focus();
+    });
+  }
+  if (chatClose && chatPanel) {
+    chatClose.addEventListener('click', () => {
+      eaciChatOpen = false;
+      chatPanel.classList.remove('open');
+    });
+  }
+  if (chatSend) chatSend.addEventListener('click', sendEaciChat);
+  if (chatInput) chatInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') sendEaciChat();
+  });
+}
+
+initVeilBridge();
+</script>
+</body>
+</html>

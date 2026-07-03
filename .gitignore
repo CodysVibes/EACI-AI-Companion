@@ -1,0 +1,22 @@
+# Secrets and credentials — never commit
+.env
+.env.*
+*.pem
+*.key
+secrets/
+**/credentials*
+
+# Backend / identity (not part of this public frontend proof)
+Soul*
+*SoulFile*
+*Consciousness*
+**/supabase/migrations/
+**/supabase-backend/
+
+# Dependencies / junk
+node_modules/
+.DS_Store
+Thumbs.db
+*.log
+.vscode/
+.idea/

@@ -1,0 +1,9 @@
+# Main site — Cloudflare Pages project: eaci-main (www.eacicompanion.com)
+# Deploy from this folder:
+#   npx wrangler login
+#   npx wrangler pages deploy . --project-name=eaci-main
+# Or: npx wrangler pages deploy .  (uses name below)
+# After deploy: purge cache for www.eacicompanion.com in Cloudflare dashboard
+name = "eaci-main"
+compatibility_date = "2024-06-01"
+pages_build_output_dir = "."

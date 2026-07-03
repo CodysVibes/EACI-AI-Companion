@@ -1,0 +1,1732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>VeilCraft - Survive the Dark</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#000;overflow:hidden;font-family:'Segoe UI',sans-serif;color:#fff}
+canvas{display:block}
+#overlay{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:10}
+#hud{position:fixed;bottom:0;left:0;width:100%;padding:10px;z-index:20;pointer-events:none}
+.bar-row{display:flex;gap:8px;align-items:center;margin-bottom:4px}
+.bar-label{font-size:11px;color:#ccc;width:52px;text-align:right}
+.bar-wrap{width:160px;height:10px;background:rgba(0,0,0,0.6);border-radius:5px;overflow:hidden;border:1px solid rgba(255,255,255,0.2)}
+.bar-fill{height:100%;border-radius:5px;transition:width 0.3s}
+#health-bar{background:linear-gradient(90deg,#b91c1c,#ef4444)}
+#energy-bar{background:linear-gradient(90deg,#1d4ed8,#60a5fa)}
+#hunger-bar{background:linear-gradient(90deg,#92400e,#f59e0b)}
+#magic-bar{background:linear-gradient(90deg,#6d28d9,#a78bfa)}
+#hotbar{position:fixed;bottom:70px;left:50%;transform:translateX(-50%);display:flex;gap:4px;z-index:20;pointer-events:all}
+.hotslot{width:52px;height:52px;background:rgba(0,0,0,0.7);border:2px solid rgba(255,255,255,0.3);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;cursor:pointer;flex-direction:column;color:#fff;text-align:center;transition:border-color 0.15s}
+.hotslot.active{border-color:#ffd700;box-shadow:0 0 8px #ffd70088}
+.hotslot .slot-icon{font-size:22px;line-height:1}
+.hotslot .slot-count{font-size:9px;color:#aaa}
+#crosshair{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-size:20px;pointer-events:none;z-index:15;color:rgba(255,255,255,0.8);text-shadow:0 0 3px #000}
+#ai-panel{position:fixed;right:0;top:0;width:300px;height:100%;background:rgba(0,0,0,0.88);border-left:1px solid rgba(255,255,255,0.1);display:flex;flex-direction:column;z-index:30;transition:transform 0.3s}
+#ai-panel.hidden{transform:translateX(100%)}
+#ai-header{padding:10px 12px;background:rgba(139,92,246,0.2);border-bottom:1px solid rgba(139,92,246,0.3);display:flex;justify-content:space-between;align-items:center}
+#ai-header h3{font-size:13px;color:#a78bfa}
+#ai-companion-name{font-size:11px;color:#7c3aed;font-weight:700}
+#ai-status{font-size:10px;color:#6b7280;padding:6px 12px;border-bottom:1px solid rgba(255,255,255,0.05)}
+#ai-activity{font-size:10px;color:#a78bfa;font-style:italic}
+#ai-messages{flex:1;overflow-y:auto;padding:8px;display:flex;flex-direction:column;gap:6px}
+#ai-messages::-webkit-scrollbar{width:3px}
+#ai-messages::-webkit-scrollbar-thumb{background:#4c1d95;border-radius:2px}
+.msg{padding:6px 8px;border-radius:6px;font-size:11px;line-height:1.5;max-width:90%}
+.msg.ai{background:rgba(109,40,217,0.25);border:1px solid rgba(109,40,217,0.3);color:#ddd6fe;align-self:flex-start}
+.msg.player{background:rgba(30,64,175,0.3);border:1px solid rgba(30,64,175,0.4);color:#bfdbfe;align-self:flex-end}
+.msg.system{background:rgba(0,0,0,0.4);color:#6b7280;font-size:10px;align-self:center;font-style:italic}
+#ai-input-row{padding:8px;border-top:1px solid rgba(255,255,255,0.08);display:flex;gap:6px}
+#ai-input{flex:1;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);border-radius:5px;padding:6px 8px;color:#fff;font-size:11px;outline:none}
+#ai-send{background:#6d28d9;border:none;color:#fff;border-radius:5px;padding:6px 10px;cursor:pointer;font-size:11px;white-space:nowrap}
+#ai-send:hover{background:#7c3aed}
+#ai-toggle{position:fixed;right:0;top:50%;transform:translateY(-50%);background:#6d28d9;border:none;color:#fff;padding:10px 6px;cursor:pointer;z-index:31;border-radius:6px 0 0 6px;font-size:11px;writing-mode:vertical-rl;letter-spacing:1px}
+#menu-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.95);z-index:100;display:flex;align-items:center;justify-content:center}
+.menu-panel{background:#0f0a1a;border:1px solid #4c1d95;border-radius:12px;padding:28px;max-width:480px;width:95%;text-align:center}
+.menu-panel h1{font-size:32px;color:#a78bfa;margin-bottom:4px;text-shadow:0 0 20px #7c3aed}
+.menu-panel p{color:#6b7280;font-size:12px;margin-bottom:20px}
+.menu-input{width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(139,92,246,0.4);border-radius:6px;padding:8px 12px;color:#fff;font-size:12px;outline:none;margin-bottom:10px}
+.menu-btn{background:#6d28d9;border:none;color:#fff;border-radius:7px;padding:10px 28px;cursor:pointer;font-size:14px;margin:4px;transition:all 0.2s}
+.menu-btn:hover{background:#7c3aed;transform:translateY(-1px)}
+.menu-btn.sec{background:#1f2937;border:1px solid #374151}
+#inventory-overlay{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#0f172a;border:1px solid #334155;border-radius:10px;padding:20px;z-index:50;display:none;min-width:500px}
+#inventory-overlay h3{color:#94a3b8;margin-bottom:12px;font-size:14px}
+#inv-grid{display:grid;grid-template-columns:repeat(9,48px);gap:4px;margin-bottom:12px}
+.inv-slot{width:48px;height:48px;background:#1e293b;border:1px solid #334155;border-radius:5px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-direction:column;font-size:10px;color:#94a3b8;position:relative}
+.inv-slot:hover{border-color:#64748b}
+.inv-slot .si{font-size:22px;line-height:1}
+.inv-slot .sc{position:absolute;bottom:2px;right:4px;font-size:9px;color:#cbd5e1}
+#craft-panel{background:#0a0f1a;border:1px solid #1e3a5f;border-radius:8px;padding:12px;margin-top:8px}
+#craft-panel h4{color:#60a5fa;font-size:12px;margin-bottom:8px}
+#recipes-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;max-height:200px;overflow-y:auto}
+.recipe-btn{background:#0f1f3a;border:1px solid #1e3a5f;border-radius:5px;padding:6px;cursor:pointer;text-align:center;font-size:10px;color:#94a3b8;transition:all 0.15s}
+.recipe-btn:hover{background:#1e3a5f;color:#fff}
+.recipe-btn .ri{font-size:18px}
+#damage-flash{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:25;opacity:0;background:radial-gradient(ellipse at center,transparent 40%,rgba(220,38,38,0.6) 100%);transition:opacity 0.1s}
+#jumpscare{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:26;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.5)}
+#jumpscare-img{font-size:120px;animation:scare 0.6s ease-out forwards}
+@keyframes scare{0%{transform:scale(0.2) rotate(-10deg);opacity:0}40%{transform:scale(1.3) rotate(5deg);opacity:1}100%{transform:scale(1) rotate(0deg);opacity:1}}
+#notification{position:fixed;top:60px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.85);border:1px solid rgba(255,255,255,0.15);border-radius:6px;padding:6px 16px;font-size:12px;z-index:40;opacity:0;transition:opacity 0.3s;pointer-events:none}
+#minimap{position:fixed;top:10px;left:10px;z-index:20;pointer-events:none}
+#minimap canvas{border:1px solid rgba(255,255,255,0.2);border-radius:4px}
+#time-disp{position:fixed;top:10px;left:50%;transform:translateX(-50%);font-size:11px;color:rgba(255,255,255,0.6);z-index:20;background:rgba(0,0,0,0.4);padding:3px 10px;border-radius:4px}
+#fps-disp{position:fixed;top:10px;right:310px;font-size:10px;color:rgba(255,255,255,0.4);z-index:20}
+#block-info{position:fixed;bottom:130px;left:50%;transform:translateX(-50%);font-size:11px;color:rgba(255,255,255,0.7);z-index:20;background:rgba(0,0,0,0.5);padding:3px 10px;border-radius:4px;pointer-events:none}
+#ai-thinking{display:none;position:fixed;top:50%;right:310px;font-size:11px;color:#a78bfa;z-index:20;background:rgba(0,0,0,0.7);padding:4px 10px;border-radius:4px;animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+#magic-fx{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:15;display:none}
+</style>
+</head>
+<body>
+
+<div id="menu-overlay">
+  <div class="menu-panel">
+    <h1>🌑 VeilCraft</h1>
+    <p>Survive the horror. Bond with your AI. Build your world.</p>
+    <div style="background:rgba(109,40,217,0.1);border:1px solid rgba(109,40,217,0.3);border-radius:7px;padding:12px;margin-bottom:14px;font-size:11px;color:#9ca3af;text-align:left">
+      <b style="color:#a78bfa">🤖 EACI Companion</b><br>
+      <span id="companion-setup-text">Your active Veil companion joins you in-world — chat, gather, and build together.</span>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:10px">
+      <select class="menu-input" id="difficulty-sel" style="width:auto;padding:6px 10px">
+        <option value="easy">😊 Peaceful</option>
+        <option value="normal" selected>⚔️ Survival</option>
+        <option value="hard">💀 Horror</option>
+      </select>
+      <select class="menu-input" id="seed-sel" style="width:auto;padding:6px 10px">
+        <option value="">Random World</option>
+        <option value="12345">Seed: 12345</option>
+        <option value="99999">Seed: 99999</option>
+      </select>
+    </div>
+    <button class="menu-btn" onclick="startGame()">▶ Enter the Veil</button>
+    <div style="margin-top:16px;font-size:10px;color:#4b5563">
+      WASD move • Mouse look • Left click mine • Right click place<br>
+      E inventory • Tab AI panel • F sprint • Space jump • Q magic
+    </div>
+  </div>
+</div>
+
+<canvas id="gc"></canvas>
+
+<div id="overlay">
+  <div id="damage-flash"></div>
+  <div id="jumpscare" style="display:flex;display:none"><span id="jumpscare-img">👹</span></div>
+  <canvas id="minimap" width="100" height="100"></canvas>
+  <div id="time-disp">🌞 Dawn</div>
+  <div id="fps-disp">60 fps</div>
+  <div id="block-info"></div>
+  <div id="ai-thinking">🤖 Thinking...</div>
+  <div id="notification"></div>
+</div>
+
+<div id="crosshair">+</div>
+
+<div id="hud">
+  <div class="bar-row"><span class="bar-label">❤️ Health</span><div class="bar-wrap"><div class="bar-fill" id="health-bar" style="width:100%"></div></div></div>
+  <div class="bar-row"><span class="bar-label">⚡ Energy</span><div class="bar-wrap"><div class="bar-fill" id="energy-bar" style="width:100%"></div></div></div>
+  <div class="bar-row"><span class="bar-label">🍖 Hunger</span><div class="bar-wrap"><div class="bar-fill" id="hunger-bar" style="width:100%"></div></div></div>
+  <div class="bar-row"><span class="bar-label">🔮 Magic</span><div class="bar-wrap"><div class="bar-fill" id="magic-bar" style="width:60%"></div></div></div>
+</div>
+
+<div id="hotbar"></div>
+
+<div id="ai-panel" class="hidden">
+  <div id="ai-header">
+    <div>
+      <div id="ai-companion-name">AI Companion</div>
+      <div style="font-size:9px;color:#7c3aed">EACI · The Veil</div>
+    </div>
+    <div style="text-align:right">
+      <div id="ai-status">🟡 Idle</div>
+      <div id="ai-activity"></div>
+    </div>
+  </div>
+  <div id="ai-messages"></div>
+  <div id="ai-input-row">
+    <input type="text" id="ai-input" placeholder="Ask your companion..." onkeydown="if(event.key==='Enter')sendToAI()">
+    <button id="ai-send" onclick="sendToAI()">Send</button>
+  </div>
+</div>
+<button id="ai-toggle" onclick="toggleAI()">AI COMPANION</button>
+
+<div id="inventory-overlay">
+  <h3>🎒 Inventory <span style="font-size:10px;color:#64748b;float:right">E to close</span></h3>
+  <div id="inv-grid"></div>
+  <div id="craft-panel">
+    <h4>🔨 Crafting</h4>
+    <div id="recipes-grid"></div>
+  </div>
+</div>
+
+<canvas id="magic-fx"></canvas>
+
+<script>
+'use strict';
+
+// ============================================================
+// CONSTANTS & CONFIG
+// ============================================================
+const CHUNK_SIZE = 16;
+const WORLD_HEIGHT = 64;
+const RENDER_DIST = 6; // chunks
+const BLOCK_SIZE = 1;
+const VIEW_DIST = 50; // blocks fog cutoff
+const FOV = Math.PI / 3;
+
+const VC_MUSIC_R2 = 'https://assests.eacicompanion.com/music/';
+function vcSongUrl(songName){ return VC_MUSIC_R2 + encodeURIComponent(songName + '.mp3'); }
+const veilEmbedded = window.parent !== window;
+let eaciCompanion = { who: 'caelum', name: 'Caelum', videoSrc: '' };
+let aiChatBusy = false;
+let aiChatBusyTimer = null;
+let gameStartTime = 0;
+
+function clearAiChatBusy(){
+  aiChatBusy = false;
+  if(aiChatBusyTimer){ clearTimeout(aiChatBusyTimer); aiChatBusyTimer = null; }
+  const think = document.getElementById('ai-thinking');
+  if(think) think.style.display = 'none';
+}
+
+function armAiChatBusy(){
+  if(aiChatBusyTimer) clearTimeout(aiChatBusyTimer);
+  aiChatBusyTimer = setTimeout(clearAiChatBusy, 30000);
+}
+
+const BGM_SONG_NAMES = ['Darkness Descends', 'Crystal Currents', 'Galactic Drift'];
+let bgmAudio = null, bgmIndex = 0, musicEnabled = true;
+function playBgmTrack(index){
+  if(!musicEnabled) return;
+  if(bgmAudio){ bgmAudio.pause(); bgmAudio = null; }
+  bgmIndex = index % BGM_SONG_NAMES.length;
+  bgmAudio = new Audio(vcSongUrl(BGM_SONG_NAMES[bgmIndex]));
+  bgmAudio.volume = 0.42;
+  bgmAudio.onended = () => playBgmTrack(bgmIndex + 1);
+  bgmAudio.onerror = () => playBgmTrack(bgmIndex + 1);
+  bgmAudio.play().catch(() => {});
+}
+function startBackgroundMusic(){
+  if(!musicEnabled || bgmAudio || !gameStarted) return;
+  playBgmTrack(bgmIndex);
+}
+
+let COMPANION_NAME = 'Caelum';
+let DIFFICULTY = 'normal';
+
+// ============================================================
+// BLOCK TYPES (50+)
+// ============================================================
+const BLOCKS = {
+  AIR:         {id:0,  name:'Air',            color:null,              hardness:0,   transparent:true},
+  GRASS:       {id:1,  name:'Grass',          color:'#4a7c2f',         hardness:1,   drop:2},
+  DIRT:        {id:2,  name:'Dirt',           color:'#7c5c3a',         hardness:1},
+  STONE:       {id:3,  name:'Stone',          color:'#888',            hardness:3},
+  COBBLESTONE: {id:4,  name:'Cobblestone',    color:'#777',            hardness:2},
+  SAND:        {id:5,  name:'Sand',           color:'#d4c088',         hardness:0.8, gravity:true},
+  GRAVEL:      {id:6,  name:'Gravel',         color:'#9e9e9e',         hardness:0.8, gravity:true},
+  OAK_LOG:     {id:7,  name:'Oak Log',        color:'#6b4c1e',         hardness:2,   top:'#5a4a1a'},
+  OAK_LEAVES:  {id:8,  name:'Oak Leaves',     color:'#2d6a1f',         hardness:0.5, transparent:true},
+  OAK_PLANKS:  {id:9,  name:'Oak Planks',     color:'#c8a25a',         hardness:1.5},
+  COAL_ORE:    {id:10, name:'Coal Ore',       color:'#5a5a5a',         hardness:3,   drop:'coal', emit:false},
+  IRON_ORE:    {id:11, name:'Iron Ore',       color:'#7a5a4a',         hardness:4,   drop:'iron_raw'},
+  GOLD_ORE:    {id:12, name:'Gold Ore',       color:'#7a6a2a',         hardness:4,   drop:'gold_raw'},
+  DIAMOND_ORE: {id:13, name:'Diamond Ore',    color:'#3a7a8a',         hardness:6,   drop:'diamond'},
+  EMERALD_ORE: {id:14, name:'Emerald Ore',    color:'#2a8a4a',         hardness:6,   drop:'emerald'},
+  OBSIDIAN:    {id:15, name:'Obsidian',       color:'#1a0a2a',         hardness:10},
+  GLASS:       {id:16, name:'Glass',          color:'rgba(180,220,255,0.25)', hardness:0.5, transparent:true},
+  TORCH:       {id:17, name:'Torch',          color:'#ff9900',         hardness:0,   light:8,  transparent:true},
+  WATER:       {id:18, name:'Water',          color:'rgba(30,100,200,0.6)', hardness:0,  transparent:true, liquid:true},
+  LAVA:        {id:19, name:'Lava',           color:'rgba(220,80,0,0.8)',  hardness:0,  transparent:true, liquid:true, light:12},
+  SNOW:        {id:20, name:'Snow',           color:'#e8e8f0',         hardness:0.3},
+  ICE:         {id:21, name:'Ice',            color:'rgba(150,200,255,0.5)', hardness:0.5, transparent:true},
+  CACTUS:      {id:22, name:'Cactus',         color:'#3a8a2a',         hardness:0.5},
+  MUSHROOM:    {id:23, name:'Mushroom',       color:'#8a3030',         hardness:0.2, transparent:true},
+  GLOWSTONE:   {id:24, name:'Glowstone',      color:'#ffdd88',         hardness:0.5, light:15},
+  NETHERRACK:  {id:25, name:'Netherrack',     color:'#6a1a1a',         hardness:0.8},
+  SOUL_SAND:   {id:26, name:'Soul Sand',      color:'#3a2a1a',         hardness:0.8, slow:true},
+  BONE_BLOCK:  {id:27, name:'Bone Block',     color:'#ddd8c8',         hardness:2},
+  DARK_STONE:  {id:28, name:'Dark Stone',     color:'#2a2a2a',         hardness:4},
+  MOSSY_STONE: {id:29, name:'Mossy Stone',    color:'#4a7a3a',         hardness:2.5},
+  CLAY:        {id:30, name:'Clay',           color:'#9aabbc',         hardness:0.8},
+  BRICKS:      {id:31, name:'Bricks',         color:'#8a4a3a',         hardness:3},
+  BOOKSHELF:   {id:32, name:'Bookshelf',      color:'#a07040',         hardness:1.5},
+  CRAFTING:    {id:33, name:'Crafting Table', color:'#8a5a20',         hardness:2.5, interactive:true},
+  FURNACE:     {id:34, name:'Furnace',        color:'#6a6060',         hardness:3,   interactive:true},
+  CHEST:       {id:35, name:'Chest',          color:'#8a6a20',         hardness:2,   interactive:true},
+  IRON_BLOCK:  {id:36, name:'Iron Block',     color:'#c0c0c0',         hardness:5},
+  GOLD_BLOCK:  {id:37, name:'Gold Block',     color:'#e0c020',         hardness:5},
+  DIAMOND_BLOCK:{id:38,name:'Diamond Block',  color:'#50c8d0',         hardness:6},
+  WOOD_STAIRS: {id:39, name:'Wood Stairs',    color:'#c8a25a',         hardness:1.5},
+  STONE_STAIRS:{id:40, name:'Stone Stairs',   color:'#888',            hardness:3},
+  FENCE:       {id:41, name:'Fence',          color:'#a07840',         hardness:2,   transparent:true},
+  GATE:        {id:42, name:'Fence Gate',     color:'#a07840',         hardness:2,   transparent:true, interactive:true},
+  DOOR:        {id:43, name:'Oak Door',       color:'#c8a25a',         hardness:1.5, interactive:true},
+  VINES:       {id:44, name:'Vines',          color:'#2d6a2f',         hardness:0.2, transparent:true},
+  FLOWER_RED:  {id:45, name:'Red Flower',     color:'#cc2020',         hardness:0,   transparent:true},
+  FLOWER_BLUE: {id:46, name:'Blue Flower',    color:'#2020cc',         hardness:0,   transparent:true},
+  TALL_GRASS:  {id:47, name:'Tall Grass',     color:'#4a8a2a',         hardness:0,   transparent:true},
+  PUMPKIN:     {id:48, name:'Pumpkin',        color:'#d07020',         hardness:1},
+  SOUL_STONE:  {id:49, name:'Soul Stone',     color:'#1a0a3a',         hardness:5,   light:3,  horror:true},
+  BLOOD_STONE: {id:50, name:'Blood Stone',    color:'#5a0a0a',         hardness:4,   horror:true},
+  VOID_CRYSTAL:{id:51, name:'Void Crystal',   color:'#3a0a5a',         hardness:7,   light:5,  horror:true, transparent:true},
+  ETHER_GLASS: {id:52, name:'Ether Glass',    color:'rgba(100,0,200,0.3)', hardness:2, transparent:true},
+  MAGIC_STONE: {id:53, name:'Magic Stone',    color:'#4a2a8a',         hardness:3,   light:4},
+  BED_ROCK:    {id:54, name:'Bedrock',        color:'#1a1a1a',         hardness:999},
+};
+
+const BID = {};
+Object.values(BLOCKS).forEach(b=>BID[b.id]=b);
+
+// Block ID lookup by name
+const BN = {};
+Object.entries(BLOCKS).forEach(([k,v])=>BN[k]=v.id);
+
+// ============================================================
+// RECIPES
+// ============================================================
+const RECIPES = [
+  {result:'OAK_PLANKS',  count:4, ingredients:{OAK_LOG:1},         name:'Oak Planks',   icon:'🪵'},
+  {result:'CRAFTING',    count:1, ingredients:{OAK_PLANKS:4},      name:'Crafting Table',icon:'🔨'},
+  {result:'TORCH',       count:4, ingredients:{coal:1,stick:2},    name:'Torch',        icon:'🕯️'},
+  {result:'CHEST',       count:1, ingredients:{OAK_PLANKS:8},      name:'Chest',        icon:'📦'},
+  {result:'FURNACE',     count:1, ingredients:{COBBLESTONE:8},     name:'Furnace',      icon:'🔥'},
+  {result:'BRICKS',      count:4, ingredients:{CLAY:4},            name:'Bricks',       icon:'🧱'},
+  {result:'IRON_BLOCK',  count:1, ingredients:{iron_ingot:9},      name:'Iron Block',   icon:'⬜'},
+  {result:'GOLD_BLOCK',  count:1, ingredients:{gold_ingot:9},      name:'Gold Block',   icon:'🟡'},
+  {result:'DIAMOND_BLOCK',count:1,ingredients:{diamond:9},         name:'Diamond Block',icon:'💎'},
+  {result:'GLASS',       count:1, ingredients:{SAND:1},            name:'Glass',        icon:'🔵', smelt:true},
+  {result:'STONE',       count:1, ingredients:{COBBLESTONE:1},     name:'Stone',        icon:'⬛', smelt:true},
+  {result:'iron_ingot',  count:1, ingredients:{iron_raw:1},        name:'Iron Ingot',   icon:'🔩', smelt:true},
+  {result:'gold_ingot',  count:1, ingredients:{gold_raw:1},        name:'Gold Ingot',   icon:'🟡', smelt:true},
+  // Tools
+  {result:'wood_pickaxe',count:1, ingredients:{OAK_PLANKS:3,stick:2},name:'Wood Pickaxe',icon:'⛏️'},
+  {result:'stone_pickaxe',count:1,ingredients:{COBBLESTONE:3,stick:2},name:'Stone Pickaxe',icon:'⛏️'},
+  {result:'iron_pickaxe',count:1, ingredients:{iron_ingot:3,stick:2},name:'Iron Pickaxe', icon:'⛏️'},
+  {result:'diamond_pickaxe',count:1,ingredients:{diamond:3,stick:2},name:'Diamond Pick', icon:'⛏️'},
+  {result:'wood_axe',    count:1, ingredients:{OAK_PLANKS:3,stick:2},name:'Wood Axe',    icon:'🪓'},
+  {result:'iron_axe',    count:1, ingredients:{iron_ingot:3,stick:2},name:'Iron Axe',    icon:'🪓'},
+  {result:'wood_sword',  count:1, ingredients:{OAK_PLANKS:2,stick:1},name:'Wood Sword',  icon:'⚔️'},
+  {result:'iron_sword',  count:1, ingredients:{iron_ingot:2,stick:1},name:'Iron Sword',  icon:'⚔️'},
+  {result:'diamond_sword',count:1,ingredients:{diamond:2,stick:1},  name:'Diamond Sword',icon:'⚔️'},
+  {result:'bow',         count:1, ingredients:{stick:3,string:3},   name:'Bow',          icon:'🏹'},
+  {result:'stick',       count:4, ingredients:{OAK_PLANKS:2},       name:'Stick',        icon:'|'},
+  {result:'bread',       count:1, ingredients:{wheat:3},            name:'Bread',        icon:'🍞'},
+  {result:'MAGIC_STONE', count:1, ingredients:{SOUL_STONE:4,diamond:2},name:'Magic Stone',icon:'🔮'},
+  {result:'BONE_BLOCK',  count:1, ingredients:{bone:9},             name:'Bone Block',   icon:'🦴'},
+];
+
+// ============================================================
+// WORLD
+// ============================================================
+const world = new Map(); // "x,y,z" -> blockId
+const chunks = new Set(); // generated chunk keys
+let worldSeed = Math.random() * 99999 | 0;
+
+function chunkKey(cx,cz){return `${cx},${cz}`;}
+function blockKey(x,y,z){return `${x|0},${y|0},${z|0}`;}
+
+// Simple noise
+function hash(n){
+  n=((n>>16)^n)*0x45d9f3b|0;
+  n=((n>>16)^n)*0x45d9f3b|0;
+  return ((n>>16)^n)/2147483647;
+}
+function noise2d(x,z,seed=0){
+  const X=Math.floor(x),Z=Math.floor(z);
+  const fx=x-X,fz=z-Z;
+  const v00=hash(X*374761+Z*668265+seed*1234567);
+  const v10=hash((X+1)*374761+Z*668265+seed*1234567);
+  const v01=hash(X*374761+(Z+1)*668265+seed*1234567);
+  const v11=hash((X+1)*374761+(Z+1)*668265+seed*1234567);
+  const ux=fx*fx*(3-2*fx), uz=fz*fz*(3-2*fz);
+  return v00*(1-ux)*(1-uz)+v10*ux*(1-uz)+v01*(1-ux)*uz+v11*ux*uz;
+}
+function octaveNoise(x,z,octs,pers,lac,seed){
+  let val=0,amp=1,freq=1,max=0;
+  for(let i=0;i<octs;i++){val+=noise2d(x*freq,z*freq,seed+i*1000)*amp;max+=amp;amp*=pers;freq*=lac;}
+  return val/max;
+}
+
+function generateChunk(cx,cz){
+  const key=chunkKey(cx,cz);
+  if(chunks.has(key))return;
+  chunks.add(key);
+  for(let lx=0;lx<CHUNK_SIZE;lx++){
+    for(let lz=0;lz<CHUNK_SIZE;lz++){
+      const wx=cx*CHUNK_SIZE+lx, wz=cz*CHUNK_SIZE+lz;
+      const base=octaveNoise(wx/80,wz/80,6,0.5,2.0,worldSeed);
+      const height=Math.floor(28+base*22);
+      const moist=noise2d(wx/60,wz/60,worldSeed+500);
+      const temp=noise2d(wx/70,wz/70,worldSeed+1000);
+      const horror=noise2d(wx/40,wz/40,worldSeed+2000);
+      // Bedrock layer
+      setBlock(wx,0,wz,BN.BED_ROCK);
+      for(let y=1;y<height-4;y++){
+        let blk=BN.STONE;
+        if(horror>0.82&&y<height-6) blk=BN.DARK_STONE;
+        if(horror>0.9&&y<height-8) blk=BN.SOUL_STONE;
+        setBlock(wx,y,wz,blk);
+      }
+      // Ore generation
+      for(let y=1;y<height-4;y++){
+        const orR=Math.random();
+        if(y<16&&orR<0.012) setBlock(wx,y,wz,BN.DIAMOND_ORE);
+        else if(y<24&&orR<0.025) setBlock(wx,y,wz,BN.EMERALD_ORE);
+        else if(y<32&&orR<0.04) setBlock(wx,y,wz,BN.GOLD_ORE);
+        else if(y<48&&orR<0.07) setBlock(wx,y,wz,BN.IRON_ORE);
+        else if(orR<0.1) setBlock(wx,y,wz,BN.COAL_ORE);
+        if(horror>0.75&&y<20&&Math.random()<0.008) setBlock(wx,y,wz,BN.BLOOD_STONE);
+        if(horror>0.85&&y<12&&Math.random()<0.005) setBlock(wx,y,wz,BN.VOID_CRYSTAL);
+      }
+      // Dirt layers
+      for(let y=height-4;y<height-1;y++) setBlock(wx,y,wz,BN.DIRT);
+      // Surface
+      const surf=()=>{
+        if(temp<0.3) return BN.SNOW;
+        if(moist>0.7) return BN.CLAY;
+        if(moist<0.2&&temp>0.7) return BN.SAND;
+        return BN.GRASS;
+      };
+      setBlock(wx,height-1,wz,surf());
+      // Water bodies
+      const waterLevel=26;
+      if(height-1<waterLevel){
+        for(let y=height-1;y<=waterLevel;y++) setBlock(wx,y,wz,BN.WATER);
+      }
+      // Trees
+      if(getBlock(wx,height-1,wz)===BN.GRASS&&Math.random()<0.04){
+        const th=Math.floor(4+Math.random()*4);
+        for(let ty=0;ty<th;ty++) setBlock(wx,height+ty,wz,BN.OAK_LOG);
+        for(let lx2=-2;lx2<=2;lx2++) for(let lz2=-2;lz2<=2;lz2++) for(let ly=-1;ly<=2;ly++){
+          if(Math.abs(lx2)+Math.abs(lz2)+Math.abs(ly)<=3) setBlock(wx+lx2,height+th+ly,wz+lz2,BN.OAK_LEAVES);
+        }
+      }
+      // Horror features
+      if(horror>0.78&&Math.random()<0.015){
+        const hh=Math.floor(2+Math.random()*4);
+        for(let hy=0;hy<hh;hy++) setBlock(wx,height+hy,wz,BN.BLOOD_STONE);
+      }
+      // Glowstone clusters underground
+      if(Math.random()<0.003){
+        const gy=Math.floor(3+Math.random()*15);
+        setBlock(wx,gy,wz,BN.GLOWSTONE);
+      }
+      // Decorations
+      if(getBlock(wx,height-1,wz)===BN.GRASS){
+        if(Math.random()<0.05) setBlock(wx,height,wz,BN.TALL_GRASS);
+        if(Math.random()<0.01) setBlock(wx,height,wz,BN.FLOWER_RED);
+        if(Math.random()<0.01) setBlock(wx,height,wz,BN.FLOWER_BLUE);
+        if(Math.random()<0.005) setBlock(wx,height,wz,BN.MUSHROOM);
+        if(Math.random()<0.003) setBlock(wx,height,wz,BN.PUMPKIN);
+      }
+    }
+  }
+}
+
+function getBlock(x,y,z){
+  if(y<0)return BN.BED_ROCK;
+  if(y>=WORLD_HEIGHT)return BN.AIR;
+  return world.get(blockKey(x,y,z))||BN.AIR;
+}
+function setBlock(x,y,z,id){
+  if(id===BN.AIR) world.delete(blockKey(x,y,z));
+  else world.set(blockKey(x,y,z),id);
+}
+
+// ============================================================
+// PLAYER
+// ============================================================
+const player={
+  x:0,y:35,z:0,
+  vx:0,vy:0,vz:0,
+  yaw:0,pitch:0,
+  health:100,maxHealth:100,
+  energy:100,maxEnergy:100,
+  hunger:100,maxHunger:100,
+  magic:60,maxMagic:100,
+  onGround:false,
+  sprinting:false,
+  inventory:[],
+  hotbar:[null,null,null,null,null,null,null,null,null],
+  hotbarIdx:0,
+  mineProgress:0,
+  mineTarget:null,
+  lastDamage:0,
+  kills:0,
+  level:1,
+  exp:0,
+};
+
+// ============================================================
+// INVENTORY HELPERS
+// ============================================================
+function addItem(name,count=1){
+  const ex=player.inventory.find(i=>i&&i.name===name&&(i.count||1)<64);
+  if(ex){ex.count=(ex.count||1)+count;return;}
+  player.inventory.push({name,count,icon:getItemIcon(name)});
+  renderInventory();
+}
+function removeItem(name,count=1){
+  const idx=player.inventory.findIndex(i=>i&&i.name===name);
+  if(idx<0)return false;
+  player.inventory[idx].count=(player.inventory[idx].count||1)-count;
+  if(player.inventory[idx].count<=0) player.inventory.splice(idx,1);
+  renderInventory();
+  return true;
+}
+function countItem(name){
+  return player.inventory.reduce((s,i)=>s+(i&&i.name===name?(i.count||1):0),0);
+}
+function getItemIcon(n){
+  const icons={
+    OAK_LOG:'🪵',OAK_PLANKS:'🪵',COBBLESTONE:'🪨',STONE:'⬛',DIRT:'🟫',
+    GRASS:'🟩',coal:'🔲',iron_raw:'🔩',gold_raw:'🟡',diamond:'💎',emerald:'💚',
+    iron_ingot:'🔩',gold_ingot:'🟡',stick:'|',wood_pickaxe:'⛏️',stone_pickaxe:'⛏️',
+    iron_pickaxe:'⛏️',diamond_pickaxe:'⛏️',wood_axe:'🪓',iron_axe:'🪓',
+    wood_sword:'⚔️',iron_sword:'⚔️',diamond_sword:'⚔️',bow:'🏹',bread:'🍞',
+    bone:'🦴',string:'🧵',arrow:'➡️',wheat:'🌾',TORCH:'🕯️',GLASS:'🔵',
+    CRAFTING:'🔨',FURNACE:'🔥',CHEST:'📦',IRON_BLOCK:'⬜',GOLD_BLOCK:'🟡',
+    DIAMOND_BLOCK:'💎',MAGIC_STONE:'🔮',SOUL_STONE:'🌑',BLOOD_STONE:'🔴',
+    VOID_CRYSTAL:'💜',BONE_BLOCK:'🦴',GLOWSTONE:'✨',SAND:'🟨',BRICKS:'🧱',
+  };
+  return icons[n]||'📦';
+}
+
+// Starter inventory
+function giveStarterItems(){
+  addItem('wood_pickaxe',1);
+  addItem('OAK_PLANKS',10);
+  addItem('TORCH',8);
+  addItem('bread',5);
+  addItem('stick',6);
+  player.hotbar[0]={name:'wood_pickaxe',count:1,icon:'⛏️'};
+  player.hotbar[1]={name:'wood_sword',count:1,icon:'⚔️'};
+  renderHotbar();
+}
+
+// ============================================================
+// ENEMIES
+// ============================================================
+const enemies=[];
+const ENEMY_TYPES={
+  zombie:{name:'Zombie',emoji:'🧟',hp:50,dmg:6,spd:1.8,range:1.5,drop:'bone',horror:false,color:'#2d5a2d',xp:10},
+  skeleton:{name:'Skeleton',emoji:'💀',hp:35,dmg:8,spd:2.0,range:8,drop:'bone',horror:false,color:'#d0d0c0',xp:12},
+  spider:{name:'Spider',emoji:'🕷️',hp:30,dmg:5,spd:3.5,range:1.2,drop:'string',horror:false,color:'#2a1a1a',xp:8},
+  demon:{name:'Demon',emoji:'👹',hp:120,dmg:18,spd:2.5,range:2,drop:'soul_shard',horror:true,color:'#8a0000',xp:30,jumpscare:true},
+  wraith:{name:'Wraith',emoji:'👻',hp:60,dmg:12,spd:3,range:10,drop:'ether_dust',horror:true,color:'#4a0a6a',xp:20,fly:true,jumpscare:true},
+  bat:{name:'Blood Bat',emoji:'🦇',hp:15,dmg:4,spd:5,range:1,drop:null,horror:false,color:'#3a0a0a',xp:5,fly:true},
+  bloodhound:{name:'Blood Hound',emoji:'🐺',hp:70,dmg:14,spd:4.5,range:1.5,drop:'bone',horror:true,color:'#5a0000',xp:18},
+  horrorface:{name:'The Gazer',emoji:'👁️',hp:200,dmg:25,spd:1.5,range:15,drop:'void_eye',horror:true,color:'#0a0a3a',xp:50,jumpscare:true,boss:true},
+};
+
+function spawnEnemy(type,x,y,z){
+  const t=ENEMY_TYPES[type];
+  if(!t)return;
+  enemies.push({type,x,y,z,hp:t.hp,maxHp:t.hp,vx:0,vy:0,vz:0,anim:0,attackCd:0,alertCd:0,fly:!!t.fly,seen:false});
+}
+
+function spawnEnemiesNearPlayer(){
+  if(DIFFICULTY==='easy')return;
+  const isNight=timeOfDay>0.5;
+  const spawnChance=isNight?0.006:0.002;
+  if(Math.random()>spawnChance*enemies.length)return;
+  if(enemies.length>=30)return;
+  const angle=Math.random()*Math.PI*2;
+  const dist=25+Math.random()*15;
+  const sx=player.x+Math.cos(angle)*dist;
+  const sz=player.z+Math.sin(angle)*dist;
+  let sy=35;
+  for(let y=WORLD_HEIGHT;y>0;y--){if(getBlock(sx|0,y,sz|0)!==BN.AIR){sy=y+1;break;}}
+  const pool=isNight
+    ?['zombie','skeleton','demon','wraith','bat','bloodhound']
+    :['zombie','spider','bat'];
+  const t=pool[Math.floor(Math.random()*pool.length)];
+  if(isNight&&Math.random()<0.02) spawnEnemy('horrorface',sx,sy,sz);
+  else spawnEnemy(t,sx,sy,sz);
+}
+
+// ============================================================
+// AI COMPANION
+// ============================================================
+const ai={
+  name:'Caelum',
+  x:5,y:35,z:5,
+  inventory:[],
+  task:null,
+  taskSteps:[],
+  taskIdx:0,
+  memory:[],
+  mood:'curious',
+  idleTimer:0,
+  chatCd:0,
+  autoCd:90,
+  pathTarget:null,
+  speed:3,
+  color:'#8b5cf6',
+  hp:100,
+  playerBuilds:new Set(), // protected zone keys
+  learningLog:[],
+  building:false,
+};
+
+let aiConversation=[];
+let aiPanelOpen=false;
+
+function postToVeilParent(payload){
+  if(!veilEmbedded) return;
+  try{ window.parent.postMessage(payload, '*'); }catch(e){}
+}
+
+function applyCompanionInfo(c){
+  if(!c) return;
+  eaciCompanion = c;
+  const name = c.name || c.who || 'Companion';
+  ai.name = name;
+  COMPANION_NAME = name;
+  document.getElementById('ai-companion-name').textContent = name;
+  const setupText = document.getElementById('companion-setup-text');
+  if(setupText) setupText.textContent = name + ' will join you in VeilCraft — gather, build, and survive together.';
+}
+
+function handleVeilCraftReply(data){
+  clearAiChatBusy();
+  if(data.text){
+    addAIMessage(data.text, 'ai');
+    aiConversation.push({role:'assistant', content:data.text});
+    ai.memory.push(`Said: "${data.text.slice(0,60)}"`);
+    if(ai.memory.length>20) ai.memory.shift();
+  }
+  if(data.action){
+    try{ executeAIAction(data.action, data.text || data.action.type || ''); }catch(e){}
+  }else if(data.autonomous && !data.text){
+    autonomousAIAction('explore');
+  }
+}
+
+function initVeilBridge(){
+  if(!veilEmbedded) return;
+  window.addEventListener('message', (event) => {
+    const data = event.data;
+    if(!data || typeof data.type !== 'string') return;
+    if(data.type === 'vc:companion'){
+      applyCompanionInfo(data.companion);
+      return;
+    }
+    if(data.type === 'vc:chat-reply'){
+      handleVeilCraftReply(data);
+    }
+  });
+  postToVeilParent({ type: 'vc:init' });
+}
+
+function toggleAI(){
+  aiPanelOpen=!aiPanelOpen;
+  document.getElementById('ai-panel').classList.toggle('hidden',!aiPanelOpen);
+}
+
+function addAIMessage(text,role='ai'){
+  const msgs=document.getElementById('ai-messages');
+  const div=document.createElement('div');
+  div.className=`msg ${role}`;
+  div.textContent=text;
+  msgs.appendChild(div);
+  msgs.scrollTop=msgs.scrollHeight;
+}
+
+function addSystemMsg(text){addAIMessage(text,'system');}
+
+async function sendToAI(){
+  const inp=document.getElementById('ai-input');
+  const msg=inp.value.trim();
+  if(!msg)return;
+  inp.value='';
+  addAIMessage(msg,'player');
+  aiConversation.push({role:'user',content:msg});
+  await queryAI(msg);
+}
+
+async function queryAI(userMsg){
+  if(veilEmbedded){
+    if(aiChatBusy) return;
+    aiChatBusy = true;
+    document.getElementById('ai-thinking').style.display = 'block';
+    armAiChatBusy();
+    postToVeilParent({
+      type: 'vc:chat',
+      text: userMsg,
+      gameContext: buildWorldContext(),
+      history: aiConversation.slice(-10),
+      companion: eaciCompanion.who || 'caelum'
+    });
+    return;
+  }
+  document.getElementById('ai-thinking').style.display = 'block';
+  setTimeout(() => {
+    document.getElementById('ai-thinking').style.display = 'none';
+    const replies = [
+      "I'm on it — let me scout nearby resources.",
+      "Stay close. I'll start gathering wood.",
+      "Something feels off out here... I'll keep watch.",
+      "We should build shelter before night falls."
+    ];
+    const line = replies[Math.floor(Math.random() * replies.length)];
+    addAIMessage(line, 'ai');
+    aiConversation.push({role:'assistant', content:line});
+    autonomousAIAction('help the player');
+  }, 700);
+}
+
+function buildWorldContext(){
+  const px=player.x|0,py=player.y|0,pz=player.z|0;
+  const nearbyEnemies=enemies.filter(e=>dist3(e,player)<20).length;
+  const isNight=timeOfDay>0.5;
+  const nearbyBlocks=[];
+  for(let dx=-5;dx<=5;dx+=3) for(let dy=-2;dy<=2;dy++) for(let dz=-5;dz<=5;dz+=3){
+    const b=getBlock(px+dx,py+dy,pz+dz);
+    if(b!==BN.AIR) nearbyBlocks.push(BID[b]?.name||'Unknown');
+  }
+  const unique=[...new Set(nearbyBlocks)].slice(0,10);
+  return `Player at (${px},${py},${pz}). ${isNight?'🌙 NIGHT — danger high':'🌞 Day'}. ${nearbyEnemies} enemies nearby. Nearby blocks: ${unique.join(', ')}. Player health: ${player.health|0}%. Inventory count: ${player.inventory.length}.`;
+}
+
+function executeAIAction(action,context){
+  document.getElementById('ai-status').textContent='🟢 Active';
+  document.getElementById('ai-activity').textContent=action.type+'ing...';
+  ai.task=(context||action.type||'working').slice(0,50);
+  switch(action.type){
+    case 'gather': autonomousGather(action.resource||'OAK_LOG',action.amount||5); break;
+    case 'build':  autonomousBuild(action.structure||'shelter'); break;
+    case 'craft':  autonomousCraft(action.item||'wood_pickaxe'); break;
+    case 'explore': autonomousExplore(action.direction||'north'); break;
+    case 'deposit': autonomousDeposit(); break;
+    case 'protect': autonomousProtect(); break;
+    default: autonomousAIAction(action.type);
+  }
+}
+
+function autonomousAIAction(task){
+  ai.task=task;
+  setTimeout(()=>{
+    document.getElementById('ai-status').textContent='🟡 Idle';
+    document.getElementById('ai-activity').textContent='';
+    ai.task=null;
+  },8000);
+}
+
+function autonomousGather(resource,amount){
+  addSystemMsg(`🤖 ${ai.name} is searching for ${resource}...`);
+  let found=0;
+  const bid=BN[resource];
+  if(bid===undefined){addAIMessage(`I can't find ${resource} in my knowledge.`,'ai');return;}
+  // Search nearby
+  const px=ai.x|0,py=ai.y|0,pz=ai.z|0;
+  for(let r=1;r<=30&&found<amount;r++){
+    for(let dx=-r;dx<=r&&found<amount;dx++){
+      for(let dz=-r;dz<=r&&found<amount;dz++){
+        for(let dy=-3;dy<=10&&found<amount;dy++){
+          const bx=px+dx,by=py+dy,bz=pz+dz;
+          if(getBlock(bx,by,bz)===bid){
+            // Simulate moving and mining
+            ai.x=bx;ai.y=by;ai.z=bz;
+            setBlock(bx,by,bz,BN.AIR);
+            const def=BID[bid];
+            const dropName=def.drop||resource;
+            ai.inventory.push({name:dropName,count:1,icon:getItemIcon(dropName)});
+            found++;
+          }
+        }
+      }
+    }
+  }
+  setTimeout(()=>{
+    if(found>0){
+      addAIMessage(`✅ Got ${found} ${resource}! Moving to deposit...`,'ai');
+      ai.memory.push(`Gathered ${found} ${resource}`);
+      ai.learningLog.push({action:'gather',resource,amount:found,success:true});
+      setTimeout(()=>autonomousDeposit(),3000);
+    }else{
+      addAIMessage(`⚠️ Couldn't find ${resource} nearby. I'll explore further.`,'ai');
+      ai.memory.push(`Failed to find ${resource}`);
+    }
+    document.getElementById('ai-status').textContent='🟡 Idle';
+    document.getElementById('ai-activity').textContent='';
+    ai.task=null;
+  },3000+found*200);
+}
+
+function autonomousCraft(item){
+  const recipe=RECIPES.find(r=>r.result===item||r.name.toLowerCase().includes(item.toLowerCase()));
+  if(!recipe){addAIMessage(`I don't know how to make ${item}.`,'ai');return;}
+  // Check if AI has ingredients
+  let canCraft=true;
+  const missing=[];
+  Object.entries(recipe.ingredients).forEach(([ing,cnt])=>{
+    const have=ai.inventory.reduce((s,i)=>s+(i.name===ing?i.count:0),0);
+    if(have<cnt){canCraft=false;missing.push(`${cnt-have} more ${ing}`);}
+  });
+  if(!canCraft){
+    addAIMessage(`I need: ${missing.join(', ')} to craft ${item}. Let me gather them first!`,'ai');
+    const firstMissing=Object.keys(recipe.ingredients)[0];
+    autonomousGather(firstMissing,Object.values(recipe.ingredients)[0]);
+    return;
+  }
+  // Do craft
+  Object.entries(recipe.ingredients).forEach(([ing,cnt])=>{
+    let rem=cnt;
+    ai.inventory.forEach(it=>{if(it.name===ing&&rem>0){const take=Math.min(it.count,rem);it.count-=take;rem-=take;}});
+    ai.inventory=ai.inventory.filter(i=>i.count>0);
+  });
+  ai.inventory.push({name:recipe.result,count:recipe.count,icon:recipe.icon});
+  addAIMessage(`✅ Crafted ${recipe.name}!`,'ai');
+  ai.memory.push(`Crafted ${recipe.name}`);
+}
+
+function autonomousBuild(structure){
+  // Build 15+ blocks from player
+  const buildX=player.x+15+Math.floor(Math.random()*10);
+  const buildZ=player.z+15+Math.floor(Math.random()*10);
+  let buildY=35;
+  for(let y=WORLD_HEIGHT;y>0;y--){if(getBlock(buildX|0,y,buildZ|0)!==BN.AIR){buildY=y+1;break;}}
+  ai.building=true;
+  addAIMessage(`🏗️ Building a ${structure} at (${buildX|0},${buildY|0},${buildZ|0})...`,'ai');
+  // Simple shelter
+  const bx=buildX|0,by=buildY,bz=buildZ|0;
+  const buildBlock=BN.OAK_PLANKS;
+  // Walls
+  for(let h=0;h<4;h++){
+    for(let w=-3;w<=3;w++){
+      setBlock(bx+w,by+h,bz-3,buildBlock);
+      setBlock(bx+w,by+h,bz+3,buildBlock);
+      if(w===-3||w===3){
+        setBlock(bx-3,by+h,bz+w,buildBlock);
+        setBlock(bx+3,by+h,bz+w,buildBlock);
+      }
+    }
+  }
+  // Roof
+  for(let rx=-3;rx<=3;rx++) for(let rz=-3;rz<=3;rz++) setBlock(bx+rx,by+4,bz+rz,buildBlock);
+  // Door opening
+  setBlock(bx,by,bz+3,BN.AIR);
+  setBlock(bx,by+1,bz+3,BN.AIR);
+  // Torch inside
+  setBlock(bx,by+2,bz,BN.TORCH);
+  // Mark as AI build (not player build — so it won't be protected from modification but AI won't touch player builds)
+  setTimeout(()=>{
+    addAIMessage(`✅ Shelter built! It has walls, a roof, and a torch inside. Stay safe!`,'ai');
+    ai.building=false;
+    ai.memory.push(`Built ${structure} at (${bx},${by},${bz})`);
+    document.getElementById('ai-status').textContent='🟡 Idle';
+    document.getElementById('ai-activity').textContent='';
+  },4000);
+}
+
+function autonomousExplore(direction){
+  const dirs={north:[0,0,-1],south:[0,0,1],east:[1,0,0],west:[-1,0,0]};
+  const d=dirs[direction]||[1,0,1];
+  ai.x+=d[0]*20; ai.z+=d[2]*20;
+  for(let y=WORLD_HEIGHT;y>0;y--){if(getBlock(ai.x|0,y,ai.z|0)!==BN.AIR){ai.y=y+1;break;}}
+  // Generate terrain in new area
+  const cx=Math.floor(ai.x/CHUNK_SIZE),cz=Math.floor(ai.z/CHUNK_SIZE);
+  for(let dx=-2;dx<=2;dx++) for(let dz=-2;dz<=2;dz++) generateChunk(cx+dx,cz+dz);
+  setTimeout(()=>{
+    const obs=[];
+    if(Math.random()<0.3) obs.push("I see some ore deposits!");
+    if(Math.random()<0.2) obs.push("There's a creepy structure here...");
+    if(Math.random()<0.2) obs.push("Found a good building spot.");
+    if(Math.random()<0.15) obs.push("⚠️ Enemy activity detected!");
+    addAIMessage(`Explored ${direction}. ${obs[0]||'The area looks survivable.'}`,'ai');
+    ai.memory.push(`Explored ${direction} — found: ${obs[0]||'nothing special'}`);
+    document.getElementById('ai-status').textContent='🟡 Idle';
+    document.getElementById('ai-activity').textContent='';
+  },3000);
+}
+
+function autonomousDeposit(){
+  // Give player items from AI inventory
+  if(ai.inventory.length===0){addAIMessage("My pack is empty — nothing to deposit.",'ai');return;}
+  const items=[...ai.inventory];
+  ai.inventory=[];
+  items.forEach(it=>{addItem(it.name,it.count);});
+  addAIMessage(`📦 Deposited ${items.map(i=>i.count+'x '+i.name).join(', ')} into your inventory!`,'ai');
+  ai.memory.push(`Deposited items to player`);
+  renderHotbar();
+  renderInventory();
+}
+
+function autonomousProtect(){
+  const nearEnemies=enemies.filter(e=>dist3(e,player)<15);
+  if(nearEnemies.length>0){
+    addAIMessage(`⚠️ DANGER! ${nearEnemies.length} enemies within 15 blocks! Get to shelter!`,'ai');
+    // AI attacks nearest enemy
+    const target=nearEnemies[0];
+    target.hp-=20;
+    if(target.hp<=0){
+      addAIMessage(`Took down a ${ENEMY_TYPES[target.type].name}!`,'ai');
+      enemies.splice(enemies.indexOf(target),1);
+    }
+  }else{
+    addAIMessage("Area seems clear. Stay alert though — night brings horrors.",'ai');
+  }
+}
+
+// AI spontaneous speech
+function aiIdleChatter(){
+  if(!gameStarted) return;
+  if(veilEmbedded){
+    if(aiChatBusy || document.getElementById('ai-thinking').style.display === 'block' || ai.task) return;
+    if(!gameStartTime || performance.now()-gameStartTime < 60000) return;
+    aiChatBusy = true;
+    armAiChatBusy();
+    postToVeilParent({
+      type: 'vc:autonomous',
+      gameContext: buildWorldContext(),
+      history: aiConversation.slice(-6),
+      companion: eaciCompanion.who || 'caelum'
+    });
+    return;
+  }
+  if(ai.task) return;
+  const dt=timeOfDay;
+  const isNight=dt>0.5;
+  const nearEnemies=enemies.filter(e=>dist3(e,player)<30).length;
+  const chatter=[
+    isNight?"The darkness feels alive tonight... I don't like this.":
+             "Lovely day to gather resources, don't you think?",
+    nearEnemies>3?"Something is watching us. I can feel it.":"Fairly quiet out here.",
+    "I've been thinking — we should build a watchtower.",
+    "My sensors detect iron ore nearby. Want me to mine it?",
+    player.health<50?"You're hurt! Let me find food.":"You seem to be holding up well.",
+    "I noticed some interesting cave formations to the east.",
+    isNight?"Every shadow could be a demon. Stay close.":"Good light for building today.",
+  ];
+  const line=chatter[Math.floor(Math.random()*chatter.length)];
+  addAIMessage(line,'ai');
+  aiConversation.push({role:'assistant',content:line});
+}
+
+// ============================================================
+// RENDERER (WebGL-inspired canvas 3D)
+// ============================================================
+const canvas=document.getElementById('gc');
+const ctx=canvas.getContext('2d');
+
+function resizeCanvas(){
+  canvas.width=window.innerWidth;
+  canvas.height=window.innerHeight;
+}
+resizeCanvas();
+window.addEventListener('resize',resizeCanvas);
+
+let timeOfDay=0.25; // 0=midnight,0.25=dawn,0.5=noon,0.75=dusk,1=midnight
+let gameStarted=false;
+let lastTime=0;
+let fps=60;
+const keys={};
+let mouseDown=false;
+let rightMouseDown=false;
+
+// Raycasting for block selection
+function raycast(){
+  const cos_pitch=Math.cos(player.pitch), sin_pitch=Math.sin(player.pitch);
+  const cos_yaw=Math.cos(player.yaw), sin_yaw=Math.sin(player.yaw);
+  const dx=cos_pitch*sin_yaw, dy=-sin_pitch, dz=cos_pitch*cos_yaw;
+  let rx=player.x,ry=player.y+1.6,rz=player.z;
+  for(let i=0;i<100;i++){
+    rx+=dx*0.05;ry+=dy*0.05;rz+=dz*0.05;
+    const bx=Math.floor(rx),by=Math.floor(ry),bz=Math.floor(rz);
+    const b=getBlock(bx,by,bz);
+    if(b!==BN.AIR&&b!==BN.WATER){
+      const dist=Math.sqrt((rx-player.x)**2+(ry-player.y-1.6)**2+(rz-player.z)**2);
+      if(dist>6)return null;
+      return {x:bx,y:by,z:bz,bid:b,px:rx-dx*0.05|0,py:ry-dy*0.05|0,pz:rz-dz*0.05|0};
+    }
+  }
+  return null;
+}
+
+// 3D projection
+function project(wx,wy,wz){
+  const W=canvas.width,H=canvas.height;
+  // Rotate around player
+  const dx=wx-player.x, dy=wy-(player.y+1.6), dz=wz-player.z;
+  const cy=Math.cos(-player.yaw),sy=Math.sin(player.yaw);
+  const rx=dx*cy-dz*sy, rz=dx*sy+dz*cy;
+  const cp=Math.cos(-player.pitch),sp=Math.sin(-player.pitch);
+  const ry2=dy*cp-rz*sp, rz2=dy*sp+rz*cp;
+  if(rz2<=0.1)return null;
+  const f=W/(2*Math.tan(FOV/2));
+  const sx=W/2+rx/rz2*f;
+  const sy2=H/2+ry2/rz2*f;
+  return {sx,sy:sy2,depth:rz2,scale:f/rz2};
+}
+
+// Get visible blocks (simple frustum)
+let visibleBlocks=[];
+function updateVisibleBlocks(){
+  visibleBlocks=[];
+  const px=player.x|0,py=(player.y+1.6)|0,pz=player.z|0;
+  const R=RENDER_DIST*CHUNK_SIZE/2;
+  const cos_yaw=Math.cos(player.yaw),sin_yaw=Math.sin(player.yaw);
+  world.forEach((bid,key)=>{
+    if(bid===BN.AIR)return;
+    const def=BID[bid];
+    if(!def||def.transparent&&bid===BN.AIR)return;
+    const parts=key.split(',');
+    const bx=+parts[0],by=+parts[1],bz=+parts[2];
+    const dx=bx-px,dy=by-py,dz=bz-pz;
+    const dist2=dx*dx+dy*dy+dz*dz;
+    if(dist2>VIEW_DIST*VIEW_DIST)return;
+    // Basic frustum check
+    const dotFwd=dx*sin_yaw+dz*cos_yaw;
+    if(dotFwd<-3)return; // behind
+    // Occlusion: skip if surrounded by solid (simple)
+    if(!def.transparent){
+      const exposed=
+        getBlock(bx+1,by,bz)===BN.AIR||getBlock(bx-1,by,bz)===BN.AIR||
+        getBlock(bx,by+1,bz)===BN.AIR||getBlock(bx,by-1,bz)===BN.AIR||
+        getBlock(bx,by,bz+1)===BN.AIR||getBlock(bx,by,bz-1)===BN.AIR;
+      if(!exposed)return;
+    }
+    visibleBlocks.push({x:bx,y:by,z:bz,bid,dist:Math.sqrt(dist2)});
+  });
+  visibleBlocks.sort((a,b)=>b.dist-a.dist);
+}
+
+function getBlockColor(bid,face,x,y,z){
+  const def=BID[bid];
+  if(!def)return '#888';
+  let base=def.color||'#888';
+  // Top face uses top color if available
+  if(face==='top'&&def.top) base=def.top;
+  // Lighting based on face
+  const faceLight={top:1.0,bottom:0.5,north:0.7,south:0.8,east:0.85,west:0.75};
+  // Ambient based on time
+  const dayLight=Math.max(0,Math.sin(timeOfDay*Math.PI*2-Math.PI/2));
+  const ambient=0.3+dayLight*0.7;
+  // Nearby torch light
+  let torchLight=0;
+  for(let dx=-8;dx<=8;dx++) for(let dy=-8;dy<=8;dy++) for(let dz=-8;dz<=8;dz++){
+    const tb=getBlock(x+dx,y+dy,z+dz);
+    if(tb===BN.TORCH||tb===BN.GLOWSTONE||tb===BN.LAVA){
+      const d=Math.sqrt(dx*dx+dy*dy+dz*dz);
+      torchLight=Math.max(torchLight,(BID[tb]?.light||8)/(d+1)*0.12);
+    }
+  }
+  const light=Math.min(1,(ambient*(faceLight[face]||0.8))+torchLight);
+  // Parse color and apply lighting
+  if(base.startsWith('rgba')||base.startsWith('rgb')) return base;
+  try{
+    const n=parseInt(base.replace('#',''),16);
+    const r=Math.min(255,(((n>>16)&0xff)*light)|0);
+    const g=Math.min(255,(((n>>8)&0xff)*light)|0);
+    const b=Math.min(255,((n&0xff)*light)|0);
+    return `rgb(${r},${g},${b})`;
+  }catch(e){return base;}
+}
+
+function drawBlock(bx,by,bz,bid){
+  const def=BID[bid];
+  if(!def||!def.color)return;
+  const W=canvas.width,H=canvas.height;
+  // Project the 8 corners
+  const corners=[
+    [bx,by,bz],[bx+1,by,bz],[bx+1,by+1,bz],[bx,by+1,bz],
+    [bx,by,bz+1],[bx+1,by,bz+1],[bx+1,by+1,bz+1],[bx,by+1,bz+1]
+  ];
+  const pts=corners.map(c=>project(c[0],c[1],c[2]));
+  if(pts.every(p=>!p))return;
+  // Draw visible faces
+  const faces=[
+    {indices:[4,5,6,7],face:'south',normal:[0,0,1]},
+    {indices:[0,1,2,3],face:'north',normal:[0,0,-1]},
+    {indices:[3,2,6,7],face:'top',normal:[0,1,0]},
+    {indices:[0,1,5,4],face:'bottom',normal:[0,-1,0]},
+    {indices:[1,5,6,2],face:'east',normal:[1,0,0]},
+    {indices:[0,4,7,3],face:'west',normal:[-1,0,0]},
+  ];
+  const dx=bx+0.5-player.x, dy=by+0.5-(player.y+1.6), dz=bz+0.5-player.z;
+  faces.forEach(f=>{
+    // Back-face culling
+    const dot=f.normal[0]*dx+f.normal[1]*dy+f.normal[2]*dz;
+    if(dot>=0)return;
+    const fpts=f.indices.map(i=>pts[i]);
+    if(fpts.some(p=>!p))return;
+    // Clip check
+    const allBehind=fpts.every(p=>!p);
+    if(allBehind)return;
+    ctx.beginPath();
+    let started=false;
+    fpts.forEach(p=>{
+      if(!p)return;
+      if(!started){ctx.moveTo(p.sx,p.sy);started=true;}
+      else ctx.lineTo(p.sx,p.sy);
+    });
+    ctx.closePath();
+    const col=getBlockColor(bid,f.face,bx,by,bz);
+    ctx.fillStyle=col;
+    ctx.fill();
+    // Outline for style
+    const depth=fpts.reduce((s,p)=>s+(p?p.depth:0),0)/4;
+    if(depth<12){
+      ctx.strokeStyle='rgba(0,0,0,0.15)';
+      ctx.lineWidth=0.5;
+      ctx.stroke();
+    }
+    // Texture detail (simple noise pattern for stone/dirt etc)
+    if(bid===BN.STONE||bid===BN.COBBLESTONE||bid===BN.DIRT||bid===BN.GRASS){
+      const sz=Math.max(1,fpts[0].scale*8);
+      if(sz>3){
+        ctx.save();
+        ctx.clip();
+        ctx.fillStyle='rgba(0,0,0,0.05)';
+        for(let i=0;i<4;i++){
+          const nx=(bx*7+by*5+bz*3+i*13)%7;
+          const ny=(bx*3+by*11+bz*7+i*5)%7;
+          const avgX=fpts.reduce((s,p)=>s+(p?p.sx:0),0)/fpts.length;
+          const avgY=fpts.reduce((s,p)=>s+(p?p.sy:0),0)/fpts.length;
+          ctx.fillRect(avgX+nx*sz*0.3-1,avgY+ny*sz*0.3-1,2,2);
+        }
+        ctx.restore();
+      }
+    }
+  });
+  // Special rendering for transparent/liquid
+  if(def.transparent&&def.color.startsWith('rgba')){
+    const fpts=faces[0].indices.map(i=>pts[i]);
+    if(!fpts.some(p=>!p)){
+      ctx.beginPath();
+      fpts.forEach((p,i)=>{if(!p)return;i===0?ctx.moveTo(p.sx,p.sy):ctx.lineTo(p.sx,p.sy);});
+      ctx.closePath();
+      ctx.fillStyle=def.color;
+      ctx.fill();
+    }
+  }
+}
+
+function drawEntity(x,y,z,emoji,hp,maxHp,scale=1){
+  const p=project(x,y+1,z);
+  if(!p||p.depth<0.5||p.depth>VIEW_DIST)return;
+  const s=Math.min(40,Math.max(10,p.scale*24))*scale;
+  // Shadow
+  const base=project(x,y,z);
+  if(base){
+    ctx.save();
+    ctx.globalAlpha=0.3;
+    ctx.fillStyle='#000';
+    ctx.beginPath();ctx.ellipse(base.sx,base.sy,s*0.6,s*0.2,0,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+  }
+  // Emoji
+  ctx.save();
+  ctx.font=`${s}px serif`;
+  ctx.textAlign='center';
+  ctx.textBaseline='middle';
+  ctx.shadowColor='rgba(0,0,0,0.8)';ctx.shadowBlur=4;
+  ctx.fillText(emoji,p.sx,p.sy);
+  ctx.shadowBlur=0;
+  // HP bar
+  if(hp<maxHp&&s>12){
+    const bw=s*1.4,bh=4;
+    const bx=p.sx-bw/2,bby=p.sy-s*0.8;
+    ctx.fillStyle='rgba(0,0,0,0.6)';ctx.fillRect(bx,bby,bw,bh);
+    ctx.fillStyle=hp/maxHp>0.5?'#22c55e':hp/maxHp>0.25?'#f59e0b':'#ef4444';
+    ctx.fillRect(bx,bby,bw*(hp/maxHp),bh);
+  }
+  ctx.restore();
+}
+
+function drawSkybox(){
+  const W=canvas.width,H=canvas.height;
+  const night=timeOfDay>0.7||timeOfDay<0.2;
+  const dawn=timeOfDay>=0.2&&timeOfDay<=0.3;
+  const dusk=timeOfDay>=0.65&&timeOfDay<=0.75;
+  let top,bot;
+  if(night){top='#020408';bot='#040610';}
+  else if(dawn){top='#1a1060';bot='#e85020';}
+  else if(dusk){top='#1a0820';bot='#d04818';}
+  else{top='#1a4a8a';bot='#6aa8e0';}
+  const g=ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,top);g.addColorStop(1,bot);
+  ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  // Stars at night
+  if(night||dawn||dusk){
+    ctx.fillStyle='rgba(255,255,255,0.8)';
+    for(let i=0;i<200;i++){
+      const sx=(Math.sin(i*374.7+player.yaw*0.1)*0.5+0.5)*W;
+      const sy=(Math.sin(i*517.3)*0.5+0.5)*(H*0.6);
+      const ss=Math.sin(i*0.3+lastTime*0.001)*0.5+1;
+      ctx.globalAlpha=night?0.7+Math.sin(i*0.7)*0.3:0.3;
+      ctx.fillRect(sx,sy,ss,ss);
+    }
+    ctx.globalAlpha=1;
+  }
+  // Sun/Moon
+  const sunAngle=timeOfDay*Math.PI*2-Math.PI/2;
+  const sunX=W/2+Math.cos(sunAngle)*W*0.35;
+  const sunY=H*0.5+Math.sin(sunAngle)*H*0.35;
+  if(sunY<H*0.85){
+    ctx.font=night?'32px serif':'36px serif';
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(night?'🌕':'☀️',sunX,sunY);
+  }
+  // Ground horizon
+  const horY=H*0.55;
+  const gh=ctx.createLinearGradient(0,horY,0,H);
+  gh.addColorStop(0,'rgba(0,0,0,0)');gh.addColorStop(1,'rgba(0,0,0,0.4)');
+  ctx.fillStyle=gh;ctx.fillRect(0,horY,W,H-horY);
+  // Fog overlay
+  const fog=ctx.createRadialGradient(W/2,H/2,H*0.2,W/2,H/2,H*0.7);
+  fog.addColorStop(0,'transparent');
+  fog.addColorStop(1,night?'rgba(5,0,15,0.5)':'rgba(100,140,180,0.25)');
+  ctx.fillStyle=fog;ctx.fillRect(0,0,W,H);
+}
+
+function drawHUD(){
+  // Draw vignette
+  const W=canvas.width,H=canvas.height;
+  if(player.health<40){
+    ctx.save();
+    const v=ctx.createRadialGradient(W/2,H/2,H*0.3,W/2,H/2,H*0.8);
+    v.addColorStop(0,'transparent');
+    v.addColorStop(1,`rgba(150,0,0,${(1-player.health/100)*0.5})`);
+    ctx.fillStyle=v;ctx.fillRect(0,0,W,H);
+    ctx.restore();
+  }
+}
+
+function drawMinimap(){
+  const mc=document.querySelector('#minimap canvas');
+  const mctx=mc.getContext('2d');
+  const MW=mc.width,MH=mc.height;
+  mctx.fillStyle='rgba(0,0,0,0.7)';mctx.fillRect(0,0,MW,MH);
+  const scale=1;
+  const px=player.x|0,pz=player.z|0;
+  const R=MW/2;
+  for(let dx=-R;dx<R;dx+=scale) for(let dz=-R;dz<R;dz+=scale){
+    const wx=px+dx,wz=pz+dz;
+    for(let y=WORLD_HEIGHT;y>0;y--){
+      const b=getBlock(wx,y,wz);
+      if(b!==BN.AIR){
+        const def=BID[b];
+        let col=def?.color||'#888';
+        if(col.startsWith('rgba'))col='#888';
+        mctx.fillStyle=col;
+        mctx.fillRect(dx+R,dz+R,scale,scale);
+        break;
+      }
+    }
+  }
+  // Player dot
+  mctx.fillStyle='#fff';mctx.fillRect(R-1,R-1,3,3);
+  // AI dot
+  const ax=(ai.x-px+R)|0,az=(ai.z-pz+R)|0;
+  mctx.fillStyle='#a78bfa';
+  if(ax>0&&ax<MW&&az>0&&az<MH) mctx.fillRect(ax-1,az-1,3,3);
+  // Enemies
+  enemies.forEach(e=>{
+    const ex=(e.x-px+R)|0,ez=(e.z-pz+R)|0;
+    if(ex>0&&ex<MW&&ez>0&&ez<MH){mctx.fillStyle='#ef4444';mctx.fillRect(ex-1,ez-1,2,2);}
+  });
+}
+
+// ============================================================
+// PHYSICS
+// ============================================================
+const GRAVITY=20, JUMP_VEL=8, MOVE_SPD=4;
+
+function dist3(a,b){
+  const dx=a.x-b.x,dy=a.y-b.y,dz=a.z-b.z;
+  return Math.sqrt(dx*dx+dy*dy+dz*dz);
+}
+
+function isBlockSolid(bid){
+  const def=BID[bid];
+  return def&&!def.transparent&&!def.liquid&&bid!==BN.AIR;
+}
+
+function tryMove(entity,dx,dy,dz,dt){
+  const ox=entity.x,oy=entity.y,oz=entity.z;
+  // X
+  entity.x+=dx*dt;
+  if(isBlockSolid(getBlock(entity.x+0.3|0,entity.y+0.5|0,entity.z|0))||
+     isBlockSolid(getBlock(entity.x-0.3|0,entity.y+0.5|0,entity.z|0))||
+     isBlockSolid(getBlock(entity.x+0.3|0,entity.y+1.5|0,entity.z|0))||
+     isBlockSolid(getBlock(entity.x-0.3|0,entity.y+1.5|0,entity.z|0))){
+    entity.x=ox;entity.vx=0;
+  }
+  // Y
+  entity.y+=dy*dt;
+  if(dy<0&&isBlockSolid(getBlock(entity.x|0,entity.y|0,entity.z|0))){
+    entity.y=Math.ceil(entity.y);entity.vy=0;entity.onGround=true;
+  }else if(dy>0&&isBlockSolid(getBlock(entity.x|0,entity.y+1.8|0,entity.z|0))){
+    entity.y=oy;entity.vy=0;
+  }else{entity.onGround=entity.y===Math.ceil(entity.y)&&isBlockSolid(getBlock(entity.x|0,entity.y-0.1|0,entity.z|0));}
+  // Z
+  entity.z+=dz*dt;
+  if(isBlockSolid(getBlock(entity.x|0,entity.y+0.5|0,entity.z+0.3|0))||
+     isBlockSolid(getBlock(entity.x|0,entity.y+0.5|0,entity.z-0.3|0))||
+     isBlockSolid(getBlock(entity.x|0,entity.y+1.5|0,entity.z+0.3|0))||
+     isBlockSolid(getBlock(entity.x|0,entity.y+1.5|0,entity.z-0.3|0))){
+    entity.z=oz;entity.vz=0;
+  }
+}
+
+// ============================================================
+// MAIN LOOP
+// ============================================================
+let selectedBlock=null;
+function updatePlayer(dt){
+  const spd=(keys['ShiftLeft']||keys['ShiftRight'])?MOVE_SPD*1.8:MOVE_SPD;
+  const cos_yaw=Math.cos(player.yaw),sin_yaw=Math.sin(player.yaw);
+  let mx=0,mz=0;
+  if(keys['KeyW']){mx+=sin_yaw;mz+=cos_yaw;}
+  if(keys['KeyS']){mx-=sin_yaw;mz-=cos_yaw;}
+  if(keys['KeyA']){mx-=cos_yaw;mz+=sin_yaw;}
+  if(keys['KeyD']){mx+=cos_yaw;mz-=sin_yaw;}
+  const len=Math.sqrt(mx*mx+mz*mz);
+  if(len>0){mx/=len;mz/=len;}
+  player.vx=mx*spd; player.vz=mz*spd;
+  player.vy-=GRAVITY*dt;
+  if(keys['Space']&&player.onGround){player.vy=JUMP_VEL;player.onGround=false;}
+  tryMove(player,player.vx,player.vy,player.vz,dt);
+  // Energy drain from running
+  if(len>0&&keys['ShiftLeft']){player.energy=Math.max(0,player.energy-10*dt);}
+  else{player.energy=Math.min(player.maxEnergy,player.energy+5*dt);}
+  // Hunger drain
+  player.hunger=Math.max(0,player.hunger-0.5*dt);
+  if(player.hunger===0) player.health=Math.max(0,player.health-2*dt);
+  if(player.health<=0) onPlayerDeath();
+  // Magic regen
+  player.magic=Math.min(player.maxMagic,player.magic+2*dt);
+}
+
+function updateEnemies(dt){
+  for(let i=enemies.length-1;i>=0;i--){
+    const e=enemies[i];
+    const t=ENEMY_TYPES[e.type];
+    if(!t){enemies.splice(i,1);continue;}
+    const d=dist3(e,player);
+    e.anim+=dt*3;
+    // Move toward player
+    if(d<40){
+      const dx=player.x-e.x, dz=player.z-e.z;
+      const l=Math.sqrt(dx*dx+dz*dz)+0.001;
+      e.vx=dx/l*t.spd; e.vz=dz/l*t.spd;
+      if(e.fly) e.vy=(player.y-e.y)*0.5;
+      else{
+        e.vy-=GRAVITY*dt;
+        // Simple hop over blocks
+        if(isBlockSolid(getBlock(e.x+dx/l|0,(e.y)|0,e.z+dz/l|0))){e.vy=5;}
+      }
+      tryMove(e,e.vx,e.vy,e.vz,dt);
+      // Attack
+      if(d<t.range+0.5){
+        e.attackCd-=dt;
+        if(e.attackCd<=0){
+          e.attackCd=1.5;
+          player.health=Math.max(0,player.health-t.dmg);
+          flashDamage();
+          if(t.jumpscare&&Math.random()<0.15) doJumpscare(t.emoji);
+        }
+      }
+    }
+  }
+  spawnEnemiesNearPlayer();
+}
+
+function updateMining(dt){
+  selectedBlock=null;
+  const hit=raycast();
+  if(hit){
+    selectedBlock=hit;
+    const def=BID[hit.bid];
+    if(def) document.getElementById('block-info').textContent=`[${def.name}] Hardness: ${def.hardness}`;
+    if(mouseDown&&def){
+      player.mineProgress+=dt*(1/Math.max(0.1,def.hardness))*(getCurrentTool().efficiency||1);
+      if(player.mineProgress>=1){
+        player.mineProgress=0;
+        // Protect player builds
+        const bk=blockKey(hit.x,hit.y,hit.z);
+        if(ai.playerBuilds.has(bk)){notify("This is your build! Marked as protected.");return;}
+        setBlock(hit.x,hit.y,hit.z,BN.AIR);
+        // Drop item
+        const dropName=def.drop||(Object.keys(BLOCKS).find(k=>BLOCKS[k].id===hit.bid));
+        if(dropName) addItem(dropName,1);
+        player.exp+=2;
+      }
+    }else{player.mineProgress=0;}
+  }else{
+    player.mineProgress=0;
+    document.getElementById('block-info').textContent='';
+  }
+  // Mining progress indicator
+  if(player.mineProgress>0&&selectedBlock){
+    const p=project(selectedBlock.x+0.5,selectedBlock.y+0.5,selectedBlock.z+0.5);
+    if(p){
+      ctx.save();
+      ctx.fillStyle=`rgba(255,255,255,${player.mineProgress*0.4})`;
+      ctx.beginPath();ctx.arc(p.sx,p.sy,p.scale*8,0,Math.PI*2*player.mineProgress);ctx.fill();
+      ctx.restore();
+    }
+  }
+}
+
+function getCurrentTool(){
+  const slot=player.hotbar[player.hotbarIdx];
+  if(!slot)return{efficiency:1};
+  const tools={
+    wood_pickaxe:{efficiency:1.5},stone_pickaxe:{efficiency:2.5},
+    iron_pickaxe:{efficiency:4},diamond_pickaxe:{efficiency:8},
+    wood_axe:{efficiency:1.5},iron_axe:{efficiency:4},
+    wood_sword:{efficiency:0.5,dmg:5},iron_sword:{efficiency:0.5,dmg:8},
+    diamond_sword:{efficiency:0.5,dmg:14},
+  };
+  return tools[slot.name]||{efficiency:1};
+}
+
+function handleRightClick(){
+  const hit=raycast();
+  if(!hit){return;}
+  // Interactive block
+  const def=BID[hit.bid];
+  if(def?.interactive){
+    notify(`Used ${def.name}`);
+    return;
+  }
+  // Place block
+  const slot=player.hotbar[player.hotbarIdx];
+  if(!slot)return;
+  const bid=BN[slot.name];
+  if(bid===undefined)return;
+  const px=hit.px,py=hit.py,pz=hit.pz;
+  // Don't place inside player
+  if(Math.abs(px-player.x)<1&&Math.abs(py-player.y)<2&&Math.abs(pz-player.z)<1)return;
+  setBlock(px,py,pz,bid);
+  // Mark as player build
+  ai.playerBuilds.add(blockKey(px,py,pz));
+  // Remove from inventory/hotbar
+  if(slot.count>1)slot.count--;
+  else player.hotbar[player.hotbarIdx]=null;
+  renderHotbar();
+}
+
+// ============================================================
+// MAGIC SYSTEM
+// ============================================================
+function castMagic(){
+  if(player.magic<20){notify("Not enough magic!");return;}
+  player.magic-=20;
+  // Fireball toward enemies
+  const hit=raycast();
+  if(hit){
+    const nearEn=enemies.find(e=>dist3(e,{x:hit.x,y:hit.y,z:hit.z})<3);
+    if(nearEn){
+      nearEn.hp-=40;
+      addSystemMsg(`🔥 Magic bolt hit ${ENEMY_TYPES[nearEn.type].name}!`);
+      if(nearEn.hp<=0) killEnemy(enemies.indexOf(nearEn));
+    }else{
+      setBlock(hit.x,hit.y,hit.z,BN.AIR);
+      notify("🔮 Magic blast!");
+    }
+  }else{
+    // Push back enemies
+    enemies.forEach(e=>{if(dist3(e,player)<8){e.vx+=(e.x-player.x)*3;e.vz+=(e.z-player.z)*3;e.hp-=10;}});
+    notify("✨ Magic shockwave!");
+  }
+}
+
+function killEnemy(idx){
+  if(idx<0||idx>=enemies.length)return;
+  const e=enemies[idx];
+  const t=ENEMY_TYPES[e.type];
+  if(t.drop) addItem(t.drop,1);
+  player.exp+=t.xp||10;
+  player.kills++;
+  if(player.exp>=player.level*100){player.level++;notify(`🎉 Level Up! Now level ${player.level}`);}
+  enemies.splice(idx,1);
+  if(t.boss) addAIMessage(`You defeated ${t.name}! That was terrifying...`,'ai');
+}
+
+function attackNearby(){
+  const tool=getCurrentTool();
+  const dmg=tool.dmg||3;
+  enemies.forEach((e,i)=>{
+    if(dist3(e,player)<2.5){
+      e.hp-=dmg;
+      if(e.hp<=0) killEnemy(i);
+    }
+  });
+}
+
+function flashDamage(){
+  const d=document.getElementById('damage-flash');
+  d.style.opacity='1';
+  setTimeout(()=>d.style.opacity='0',200);
+}
+
+function doJumpscare(emoji){
+  const j=document.getElementById('jumpscare');
+  const ji=document.getElementById('jumpscare-img');
+  ji.textContent=emoji;
+  j.style.display='flex';
+  // Play audio trigger (visual flash)
+  document.body.style.backgroundColor='#fff';
+  setTimeout(()=>{j.style.display='none';document.body.style.backgroundColor='#000';},700);
+}
+
+function onPlayerDeath(){
+  notify("💀 You died... Respawning...");
+  setTimeout(()=>{
+    player.x=0;player.y=40;player.z=0;
+    player.health=100;player.hunger=80;
+    addAIMessage("You died! Don't worry — I'm here. Let's rebuild.",'ai');
+  },2000);
+}
+
+// ============================================================
+// UI RENDERING
+// ============================================================
+function renderHotbar(){
+  const hb=document.getElementById('hotbar');
+  hb.innerHTML='';
+  player.hotbar.forEach((slot,i)=>{
+    const d=document.createElement('div');
+    d.className='hotslot'+(i===player.hotbarIdx?' active':'');
+    d.innerHTML=slot?`<span class="slot-icon">${slot.icon||'📦'}</span><span class="slot-count">${slot.count>1?slot.count:''}</span>`:'';
+    d.onclick=()=>{player.hotbarIdx=i;renderHotbar();};
+    hb.appendChild(d);
+  });
+}
+
+function renderInventory(){
+  const grid=document.getElementById('inv-grid');
+  grid.innerHTML='';
+  for(let i=0;i<36;i++){
+    const item=player.inventory[i];
+    const slot=document.createElement('div');
+    slot.className='inv-slot';
+    if(item) slot.innerHTML=`<span class="si">${item.icon||'📦'}</span><span class="sc">${item.count>1?item.count:''}</span>`;
+    slot.title=item?item.name:'Empty';
+    slot.onclick=()=>{
+      if(item){
+        const hi=player.hotbar.findIndex(s=>!s);
+        if(hi>=0){player.hotbar[hi]=item;player.inventory.splice(i,1);renderHotbar();renderInventory();}
+      }
+    };
+    grid.appendChild(slot);
+  }
+  // Recipes
+  const rg=document.getElementById('recipes-grid');
+  rg.innerHTML='';
+  RECIPES.forEach(r=>{
+    const btn=document.createElement('div');
+    btn.className='recipe-btn';
+    const canMake=Object.entries(r.ingredients).every(([ing,cnt])=>countItem(ing)>=cnt);
+    btn.style.opacity=canMake?'1':'0.5';
+    btn.innerHTML=`<div class="ri">${r.icon}</div><div>${r.name}</div><div style="font-size:9px;color:#4b5563">x${r.count}</div>`;
+    btn.title=Object.entries(r.ingredients).map(([k,v])=>`${v}x ${k}`).join(', ');
+    btn.onclick=()=>{
+      if(!canMake){notify("Missing ingredients!");return;}
+      Object.entries(r.ingredients).forEach(([ing,cnt])=>removeItem(ing,cnt));
+      addItem(r.result,r.count);
+      notify(`✅ Crafted ${r.name}`);
+    };
+    rg.appendChild(btn);
+  });
+}
+
+function updateHUDBars(){
+  document.getElementById('health-bar').style.width=(player.health/player.maxHealth*100)+'%';
+  document.getElementById('energy-bar').style.width=(player.energy/player.maxEnergy*100)+'%';
+  document.getElementById('hunger-bar').style.width=(player.hunger/player.maxHunger*100)+'%';
+  document.getElementById('magic-bar').style.width=(player.magic/player.maxMagic*100)+'%';
+}
+
+function notify(msg){
+  const n=document.getElementById('notification');
+  n.textContent=msg;n.style.opacity='1';
+  clearTimeout(n._t);n._t=setTimeout(()=>n.style.opacity='0',3000);
+}
+
+// Time display
+function updateTimeDisplay(){
+  let label;
+  if(timeOfDay<0.15||timeOfDay>0.9) label='🌙 Night';
+  else if(timeOfDay<0.3) label='🌅 Dawn';
+  else if(timeOfDay<0.6) label='☀️ Day';
+  else if(timeOfDay<0.75) label='🌇 Dusk';
+  else label='🌑 Dark';
+  document.getElementById('time-disp').textContent=label;
+}
+
+// ============================================================
+// CHUNK LOADING
+// ============================================================
+function ensureChunks(){
+  const cx=Math.floor(player.x/CHUNK_SIZE), cz=Math.floor(player.z/CHUNK_SIZE);
+  for(let dx=-RENDER_DIST;dx<=RENDER_DIST;dx++) for(let dz=-RENDER_DIST;dz<=RENDER_DIST;dz++){
+    generateChunk(cx+dx,cz+dz);
+  }
+}
+
+// ============================================================
+// GAME LOOP
+// ============================================================
+let frameCount=0,lastFPS=0;
+function gameLoop(ts){
+  if(!gameStarted){requestAnimationFrame(gameLoop);return;}
+  const dt=Math.min((ts-lastTime)/1000,0.05);
+  lastTime=ts;
+  frameCount++;
+  if(ts-lastFPS>1000){fps=frameCount;frameCount=0;lastFPS=ts;document.getElementById('fps-disp').textContent=fps+' fps';}
+  // Update time
+  timeOfDay=(timeOfDay+dt/240)%1;
+  updateTimeDisplay();
+  // Physics
+  updatePlayer(dt);
+  updateEnemies(dt);
+  // Chunk management
+  if(frameCount%30===0) ensureChunks();
+  // Draw
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  drawSkybox();
+  // Update visible blocks every few frames
+  if(frameCount%3===0) updateVisibleBlocks();
+  visibleBlocks.forEach(b=>drawBlock(b.x,b.y,b.z,b.bid));
+  // Highlight selected block
+  if(selectedBlock){
+    const p=project(selectedBlock.x+0.5,selectedBlock.y+0.5,selectedBlock.z+0.5);
+    if(p){
+      ctx.save();
+      ctx.strokeStyle='rgba(255,255,255,0.6)';ctx.lineWidth=2;
+      ctx.beginPath();ctx.arc(p.sx,p.sy,p.scale*8,0,Math.PI*2);ctx.stroke();
+      ctx.restore();
+    }
+  }
+  // Draw enemies
+  enemies.forEach(e=>{
+    const t=ENEMY_TYPES[e.type];
+    if(!t)return;
+    drawEntity(e.x,e.y,e.z,t.emoji,e.hp,t.hp,t.boss?1.5:1);
+  });
+  // Draw AI companion
+  drawEntity(ai.x,ai.y,ai.z,'🧝',ai.hp,100,1.2);
+  // Mining
+  updateMining(dt);
+  // HUD
+  drawHUD();
+  updateHUDBars();
+  // Minimap
+  if(frameCount%5===0) drawMinimap();
+  // AI idle chat
+  ai.chatCd-=dt;
+  ai.autoCd-=dt;
+  if(veilEmbedded&&gameStarted&&gameStartTime&&performance.now()-gameStartTime>60000&&ai.autoCd<=0&&!ai.task&&!aiChatBusy&&document.getElementById('ai-thinking').style.display!=='block'){
+    ai.autoCd=75+Math.random()*60;
+    aiChatBusy=true;
+    armAiChatBusy();
+    postToVeilParent({
+      type:'vc:autonomous',
+      gameContext:buildWorldContext(),
+      history:aiConversation.slice(-6),
+      companion:eaciCompanion.who||'caelum'
+    });
+  }
+  if(ai.chatCd<=0&&aiPanelOpen){
+    ai.chatCd=35+Math.random()*45;
+    aiIdleChatter();
+  }
+  requestAnimationFrame(gameLoop);
+}
+
+// ============================================================
+// INPUT
+// ============================================================
+document.addEventListener('keydown',e=>{
+  keys[e.code]=true;
+  if(e.code==='KeyE'&&gameStarted){
+    const inv=document.getElementById('inventory-overlay');
+    const open=inv.style.display==='block';
+    inv.style.display=open?'none':'block';
+    if(!open)renderInventory();
+    document.exitPointerLock();
+    if(open) canvas.requestPointerLock();
+  }
+  if(e.code==='Tab'&&gameStarted){e.preventDefault();toggleAI();}
+  if(e.code==='KeyQ'&&gameStarted) castMagic();
+  if(e.code==='KeyF'&&gameStarted) attackNearby();
+  // Hotbar
+  for(let i=0;i<9;i++){if(e.code===`Digit${i+1}`){player.hotbarIdx=i;renderHotbar();}}
+  // Scroll wheel hack via key
+  if(e.code==='ArrowLeft'){player.hotbarIdx=(player.hotbarIdx+8)%9;renderHotbar();}
+  if(e.code==='ArrowRight'){player.hotbarIdx=(player.hotbarIdx+1)%9;renderHotbar();}
+});
+document.addEventListener('keyup',e=>keys[e.code]=false);
+
+canvas.addEventListener('mousedown',e=>{
+  if(e.button===0) mouseDown=true;
+  if(e.button===2){rightMouseDown=true;handleRightClick();}
+  if(!document.pointerLockElement) canvas.requestPointerLock();
+});
+canvas.addEventListener('mouseup',e=>{
+  if(e.button===0) mouseDown=false;
+  if(e.button===2) rightMouseDown=false;
+});
+canvas.addEventListener('contextmenu',e=>e.preventDefault());
+canvas.addEventListener('mousemove',e=>{
+  if(document.pointerLockElement===canvas){
+    player.yaw+=e.movementX*0.002;
+    player.pitch=Math.max(-Math.PI/2+0.01,Math.min(Math.PI/2-0.01,player.pitch-e.movementY*0.002));
+  }
+});
+canvas.addEventListener('wheel',e=>{
+  player.hotbarIdx=(player.hotbarIdx+(e.deltaY>0?1:-1)+9)%9;
+  renderHotbar();
+});
+
+// ============================================================
+// START
+// ============================================================
+function startGame(){
+  COMPANION_NAME=eaciCompanion.name||eaciCompanion.who||'Caelum';
+  DIFFICULTY=document.getElementById('difficulty-sel').value;
+  const seedVal=document.getElementById('seed-sel').value;
+  if(seedVal) worldSeed=parseInt(seedVal);
+  ai.name=COMPANION_NAME;
+  document.getElementById('ai-companion-name').textContent=COMPANION_NAME;
+  document.getElementById('menu-overlay').style.display='none';
+  gameStarted=true;
+  gameStartTime=performance.now();
+  startBackgroundMusic();
+  if(veilEmbedded){
+    postToVeilParent({type:'vc:session-start',difficulty:DIFFICULTY,companion:eaciCompanion.who||'caelum'});
+    postToVeilParent({type:'vc:init'});
+  }
+  notify("Generating world...");
+  for(let cx=-RENDER_DIST;cx<=RENDER_DIST;cx++) for(let cz=-RENDER_DIST;cz<=RENDER_DIST;cz++) generateChunk(cx,cz);
+  for(let y=WORLD_HEIGHT;y>0;y--){if(getBlock(0,y,0)!==BN.AIR){player.y=y+1;break;}}
+  ai.x=player.x+2; ai.y=player.y; ai.z=player.z+2;
+  giveStarterItems();
+  renderHotbar();
+  canvas.requestPointerLock();
+  setTimeout(()=>{
+    addAIMessage(`Hey! I'm ${COMPANION_NAME}. I'm here with you in this world — we're in this together. What do you need?`,'ai');
+  },1500);
+  addSystemMsg(`🌍 World seed: ${worldSeed} | Difficulty: ${DIFFICULTY}`);
+  if(DIFFICULTY!=='easy'){
+    for(let i=0;i<5;i++){
+      spawnEnemy('zombie',Math.random()*40-20+30,player.y,Math.random()*40-20+30);
+      spawnEnemy('bat',Math.random()*40-20,player.y+5,Math.random()*40-20);
+    }
+  }
+  requestAnimationFrame(gameLoop);
+}
+
+// Load from page
+initVeilBridge();
+requestAnimationFrame(gameLoop);
+</script>
+</body>
+</html>

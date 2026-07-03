@@ -1,0 +1,3 @@
+# Legacy subdomains → unified deploy (mode set via ?mode= query; gating enforced client-side)
+https://beta.eacicompanion.com/*    https://www.eacicompanion.com/:splat?mode=beta    302
+https://private.eacicompanion.com/*    https://www.eacicompanion.com/:splat?mode=private    302

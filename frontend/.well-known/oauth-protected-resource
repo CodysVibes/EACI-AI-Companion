@@ -1,0 +1,9 @@
+{
+  "resource": "https://www.eacicompanion.com/",
+  "authorization_servers": [
+    "https://lntyddrwrztpuotyavlp.supabase.co/auth/v1"
+  ],
+  "bearer_methods_supported": ["header"],
+  "scopes_supported": ["openid", "profile", "email", "phone"],
+  "resource_documentation": "https://www.eacicompanion.com/docs/api.md"
+}

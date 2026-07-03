@@ -1,0 +1,47 @@
+{
+  "linkset": [
+    {
+      "anchor": "https://www.eacicompanion.com/api/veil",
+      "service-desc": [
+        {
+          "href": "https://www.eacicompanion.com/docs/api/openapi.json",
+          "type": "application/json"
+        }
+      ],
+      "service-doc": [
+        {
+          "href": "https://www.eacicompanion.com/docs/api.md",
+          "type": "text/markdown"
+        }
+      ],
+      "status": [
+        {
+          "href": "https://lntyddrwrztpuotyavlp.supabase.co/functions/v1/chat",
+          "type": "application/json",
+          "title": "Chat edge function (POST; use Supabase session JWT)"
+        }
+      ]
+    },
+    {
+      "anchor": "https://llm.eacicompanion.com/",
+      "service-desc": [
+        {
+          "href": "https://www.eacicompanion.com/docs/api/openapi.json",
+          "type": "application/json"
+        }
+      ],
+      "service-doc": [
+        {
+          "href": "https://www.eacicompanion.com/docs/api.md",
+          "type": "text/markdown"
+        }
+      ],
+      "status": [
+        {
+          "href": "https://llm.eacicompanion.com/health",
+          "type": "application/json"
+        }
+      ]
+    }
+  ]
+}

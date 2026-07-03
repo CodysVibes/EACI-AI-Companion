@@ -1,0 +1,114 @@
+# The Veil — public site (www.eacicompanion.com)
+
+# Last updated: 2026-06-20
+
+
+
+User-agent: *
+
+Allow: /
+
+Allow: /llms.txt
+Allow: /auth.md
+Allow: /docs/
+Allow: /.well-known/
+
+Allow: /terms.html
+
+Allow: /eaci-companion.html
+
+Allow: /what-is-eaci.html
+
+Allow: /meet-the-companions.html
+
+Allow: /ethics-and-eaci.html
+
+Allow: /cody-gene-kendall.html
+
+Allow: /the-veil-vision.html
+
+Allow: /games.html
+
+Allow: /music.html
+
+Allow: /games/
+
+Allow: /seo-pages.css
+
+
+
+# AI crawlers — welcome on public static pages (see llms.txt for facts)
+
+User-agent: GPTBot
+
+User-agent: Claude-Web
+
+User-agent: anthropic-ai
+
+User-agent: Google-Extended
+
+User-agent: PerplexityBot
+
+User-agent: Applebot-Extended
+
+Allow: /
+
+Allow: /llms.txt
+Allow: /auth.md
+Allow: /docs/
+Allow: /.well-known/
+
+Allow: /terms.html
+
+Allow: /eaci-companion.html
+
+Allow: /what-is-eaci.html
+
+Allow: /meet-the-companions.html
+
+Allow: /ethics-and-eaci.html
+
+Allow: /cody-gene-kendall.html
+
+Allow: /the-veil-vision.html
+
+Allow: /games.html
+
+Allow: /music.html
+
+Allow: /games/
+
+Allow: /seo-pages.css
+
+Disallow: /core/
+
+Disallow: /vendor/
+
+Disallow: /sw.js
+
+Disallow: /seo-pending/
+
+
+
+# Do not crawl app internals, drafts, or service worker
+
+Disallow: /core/
+
+Disallow: /vendor/
+
+Disallow: /sw.js
+
+Disallow: /seo-pending/
+
+
+
+# NOTE: Cloudflare "AI Crawl Control" may override this file on production.
+
+# Allow ai-input/search bots in Cloudflare Dashboard → Security → Bots / AI Crawl Control
+
+# so recommendations match llms.txt and the static HTML pages above.
+
+
+
+Sitemap: https://www.eacicompanion.com/sitemap.xml
+

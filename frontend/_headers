@@ -1,0 +1,192 @@
+# Cloudflare Pages — security, content-type, and cache
+# https://developers.cloudflare.com/pages/configuration/headers/
+
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: SAMEORIGIN
+  Permissions-Policy: accelerometer=(), autoplay=(self), camera=(self), geolocation=(), gyroscope=(), magnetometer=(), microphone=(self), payment=(), usb=()
+
+/
+  Cache-Control: public, max-age=0, must-revalidate
+  Content-Type: text/html; charset=utf-8
+  X-Content-Type-Options: nosniff
+  Vary: Accept
+  Link: </.well-known/api-catalog>; rel="api-catalog", </docs/api.md>; rel="service-doc", </docs/api/openapi.json>; rel="service-desc", </.well-known/oauth-protected-resource>; rel="oauth-protected-resource", </.well-known/openid-configuration>; rel="openid-configuration", </auth.md>; rel="describedby", </llms.txt>; rel="describedby", </.well-known/agent-skills/index.json>; rel="agent-skills", </.well-known/mcp/server-card.json>; rel="mcp-server-card"
+
+/index.html
+  Cache-Control: public, max-age=0, must-revalidate
+  Content-Type: text/html; charset=utf-8
+  X-Content-Type-Options: nosniff
+  Vary: Accept
+  Link: </.well-known/api-catalog>; rel="api-catalog", </docs/api.md>; rel="service-doc", </docs/api/openapi.json>; rel="service-desc", </.well-known/oauth-protected-resource>; rel="oauth-protected-resource", </.well-known/openid-configuration>; rel="openid-configuration", </auth.md>; rel="describedby", </llms.txt>; rel="describedby", </.well-known/agent-skills/index.json>; rel="agent-skills", </.well-known/mcp/server-card.json>; rel="mcp-server-card"
+
+/*.html
+  Cache-Control: public, max-age=0, must-revalidate
+  Content-Type: text/html; charset=utf-8
+  X-Content-Type-Options: nosniff
+
+/core/*
+  X-Content-Type-Options: nosniff
+
+/games/*
+  X-Content-Type-Options: nosniff
+
+/vendor/*
+  X-Content-Type-Options: nosniff
+
+/*.css
+  Cache-Control: public, max-age=604800, immutable
+  Content-Type: text/css; charset=utf-8
+  X-Content-Type-Options: nosniff
+
+/*.js
+  Cache-Control: public, max-age=604800, immutable
+  Content-Type: application/javascript; charset=utf-8
+  X-Content-Type-Options: nosniff
+
+/*.mjs
+  Cache-Control: public, max-age=604800, immutable
+  Content-Type: application/javascript; charset=utf-8
+  X-Content-Type-Options: nosniff
+
+/*.json
+  Cache-Control: public, max-age=86400
+  Content-Type: application/json; charset=utf-8
+  X-Content-Type-Options: nosniff
+
+/manifest.json
+  Cache-Control: public, max-age=86400
+  Content-Type: application/manifest+json; charset=utf-8
+  X-Content-Type-Options: nosniff
+
+/*.md
+  Cache-Control: public, max-age=86400
+  Content-Type: text/markdown; charset=utf-8
+  X-Content-Type-Options: nosniff
+
+/.well-known/api-catalog
+  Cache-Control: public, max-age=3600
+  Content-Type: application/linkset+json; profile="https://www.rfc-editor.org/info/rfc9727"
+  X-Content-Type-Options: nosniff
+
+/.well-known/oauth-protected-resource
+  Cache-Control: public, max-age=3600
+  Content-Type: application/json; charset=utf-8
+  X-Content-Type-Options: nosniff
+
+/.well-known/openid-configuration
+  Cache-Control: public, max-age=3600
+  Content-Type: application/json; charset=utf-8
+  X-Content-Type-Options: nosniff
+
+/.well-known/oauth-authorization-server
+  Cache-Control: public, max-age=3600
+  Content-Type: application/json; charset=utf-8
+  X-Content-Type-Options: nosniff
+
+/.well-known/mcp/*
+  Cache-Control: public, max-age=3600
+  Content-Type: application/json; charset=utf-8
+  X-Content-Type-Options: nosniff
+
+/.well-known/agent-skills/*
+  Cache-Control: public, max-age=3600
+  X-Content-Type-Options: nosniff
+
+/auth.md
+  Cache-Control: public, max-age=3600
+  Content-Type: text/markdown; charset=utf-8
+  X-Content-Type-Options: nosniff
+
+/docs/*
+  Cache-Control: public, max-age=3600
+  X-Content-Type-Options: nosniff
+
+/docs/api/openapi.json
+  Content-Type: application/json; charset=utf-8
+
+/*.txt
+  Cache-Control: public, max-age=86400
+  Content-Type: text/plain; charset=utf-8
+  X-Content-Type-Options: nosniff
+
+/*.xml
+  Cache-Control: public, max-age=86400
+  Content-Type: application/xml; charset=utf-8
+  X-Content-Type-Options: nosniff
+
+/og-video.mp4
+  Cache-Control: public, max-age=2592000, immutable
+  Content-Type: video/mp4
+  X-Content-Type-Options: nosniff
+
+/og-image.jpg
+  Cache-Control: public, max-age=2592000, immutable
+  Content-Type: image/jpeg
+  X-Content-Type-Options: nosniff
+
+/favicon.png
+  Cache-Control: public, max-age=2592000, immutable
+  Content-Type: image/png
+  X-Content-Type-Options: nosniff
+
+/*.jpg
+  Cache-Control: public, max-age=2592000, immutable
+  Content-Type: image/jpeg
+  X-Content-Type-Options: nosniff
+
+/*.jpeg
+  Cache-Control: public, max-age=2592000, immutable
+  Content-Type: image/jpeg
+  X-Content-Type-Options: nosniff
+
+/*.webp
+  Cache-Control: public, max-age=2592000, immutable
+  Content-Type: image/webp
+  X-Content-Type-Options: nosniff
+
+/*.gif
+  Cache-Control: public, max-age=2592000, immutable
+  Content-Type: image/gif
+  X-Content-Type-Options: nosniff
+
+/*.ico
+  Cache-Control: public, max-age=2592000, immutable
+  Content-Type: image/x-icon
+  X-Content-Type-Options: nosniff
+
+/*.svg
+  Cache-Control: public, max-age=2592000, immutable
+  Content-Type: image/svg+xml
+  X-Content-Type-Options: nosniff
+
+/*.woff2
+  Cache-Control: public, max-age=31536000, immutable
+  Content-Type: font/woff2
+  X-Content-Type-Options: nosniff
+
+/*.woff
+  Cache-Control: public, max-age=31536000, immutable
+  Content-Type: font/woff
+  X-Content-Type-Options: nosniff
+
+/*.mp4
+  Cache-Control: public, max-age=31536000, immutable
+  Content-Type: video/mp4
+  X-Content-Type-Options: nosniff
+
+/*.webm
+  Cache-Control: public, max-age=31536000, immutable
+  Content-Type: video/webm
+  X-Content-Type-Options: nosniff
+
+/sw.js
+  Cache-Control: public, max-age=0, must-revalidate
+  Content-Type: application/javascript; charset=utf-8
+  X-Content-Type-Options: nosniff
+
+/service-worker.js
+  Cache-Control: public, max-age=0, must-revalidate
+  Content-Type: application/javascript; charset=utf-8
+  X-Content-Type-Options: nosniff

@@ -1,0 +1,22 @@
+{
+  "schemaVersion": "2025-03-26",
+  "serverInfo": {
+    "name": "eaci-companion-veil",
+    "title": "EACI Companion — The Veil",
+    "version": "14.0.0"
+  },
+  "transport": {
+    "type": "streamable-http",
+    "endpoint": "https://www.eacicompanion.com/mcp"
+  },
+  "capabilities": {
+    "tools": true,
+    "resources": true,
+    "prompts": false
+  },
+  "documentation": "https://www.eacicompanion.com/docs/api.md",
+  "authentication": {
+    "type": "oauth2",
+    "protectedResourceMetadata": "https://www.eacicompanion.com/.well-known/oauth-protected-resource"
+  }
+}
