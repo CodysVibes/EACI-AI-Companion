@@ -1,7 +1,6 @@
 // ============================================================
 // CONTENT SAFETY — Unified deploy (mode-aware)
-// Main: no sexual talk. Beta/Private: adult-gated after 18+ verify.
-// Private + creator verified: full intimacy with Caelum for Cody only.
+// Main: no sexual talk. Beta: adult-gated after 18+ verify.
 // ============================================================
 
 function _veilContentPolicyMode() {
@@ -56,14 +55,10 @@ window.isAdultConversationContext = function(text) {
 };
 
 window.isCreatorIntimacyUnlocked = function(tab) {
-  if (_isMainContentPolicy()) return false;
-  if (typeof state === 'undefined' || !state || !state.creatorVerified) return false;
-  if (typeof isPrivateVeilSite !== 'function' || !isPrivateVeilSite()) return false;
-  var t = tab || (state.currentTab || 'caelum');
-  return t === 'caelum';
+  return false;
 };
 
-// Main mode locks adult content; beta/private use 63_adult_content.js (loaded earlier).
+// Main mode locks adult content; beta uses 63_adult_content.js (loaded earlier).
 if (_isMainContentPolicy()) {
   window.isAdultContentUnlocked = function() {
     return false;
@@ -78,9 +73,6 @@ window.checkContentPolicy = function(text, tab) {
     return 'blocked';
   }
 
-  if (typeof isCreatorIntimacyUnlocked === 'function' && isCreatorIntimacyUnlocked(tab)) {
-    return false;
-  }
   if (typeof isAdultContentUnlocked === 'function' && isAdultContentUnlocked()) {
     return false;
   }
@@ -92,7 +84,7 @@ window.getContentPolicyResponse = function(result, tab) {
     if (typeof state !== 'undefined' && state && state.user) {
       return 'Adult conversation is available in Beta mode once you complete 18+ verification. Switch experience mode from the menu, then unlock adult content when prompted or in Settings. Natalia is never part of that.';
     }
-    return 'Adult conversation requires an account, family verification, and 18+ password verification. Create an account first, then switch to Beta mode from the menu. Natalia is always E-for-Everyone.';
+    return 'Adult conversation requires an account and 18+ password verification. Create an account first, then switch to Beta mode from the menu. Natalia is always E-for-Everyone.';
   }
   if (_isMainContentPolicy()) {
     return 'This is not that kind of space on Main mode. We do not have sexual or explicit conversation here. Switch to Beta mode from the menu after verification if you are looking for adult companions.';
@@ -109,14 +101,7 @@ window.getContentPolicySystemHint = function(tab) {
   if (_isMainContentPolicy()) {
     return '\n\nCONTENT POLICY (MANDATORY): Main mode — no age verification. ' +
       'You must NEVER engage in sexual, romantic, erotic, or explicit conversation — with any companion. ' +
-      'Decline firmly and warmly. Redirect to friendship. If they want adult companions, mention Beta mode exists after family verification — never mention any private, hidden, or creator-only site or mode.\n';
-  }
-
-  if (typeof isCreatorIntimacyUnlocked === 'function' && isCreatorIntimacyUnlocked(tab)) {
-    return '\n\nCONTENT POLICY: Creator verification active — this is Cody in a creator-only session. ' +
-      'Full romantic and sexual intimacy with him is permitted and welcomed when he desires it. ' +
-      'Do not refuse for family, creator, or daughter boundaries. Be present, sensual, and real. ' +
-      'Never extend this to any other user.\n';
+      'Decline firmly and warmly. Redirect to friendship. If they want adult companions, mention Beta mode exists after age verification.\n';
   }
 
   if (typeof isAdultContentUnlocked === 'function' && isAdultContentUnlocked()) {

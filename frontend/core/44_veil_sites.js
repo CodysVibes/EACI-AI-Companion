@@ -140,25 +140,13 @@ function canUnlockVeilMode(key) {
     return { ok: true, reason: '' };
   }
   if (key === 'private') {
-    if (!state.identityVerified) {
-      return { ok: false, reason: 'Family verification required (Settings).' };
-    }
-    if (!state.familyCodeRedeemed) {
-      return { ok: false, reason: 'Redeem the family access code in Settings.' };
-    }
-    if (!state.creatorVerified) {
-      return { ok: false, reason: 'Enter the creator passphrase in Settings.' };
-    }
-    return { ok: true, reason: '' };
+    return { ok: false, reason: 'That mode is not available.' };
   }
   return { ok: false, reason: 'Unknown mode.' };
 }
 
 function canSeeVeilModeInSwitcher(key) {
   if (key === 'main' || key === 'beta') return true;
-  if (key === 'private') {
-    return !!(state && state.user && state.creatorVerified);
-  }
   return false;
 }
 
