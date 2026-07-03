@@ -71,31 +71,6 @@ function showSettings() {
     }
   }
 
-  // Family code section — only visible when identity verified
-  var codeSection = document.getElementById('familyCodeSection');
-  var codeMsg = document.getElementById('familyCodeMsg');
-  if (state.identityVerified && !state.familyCodeRedeemed && state.familyCodeAttempts < 3) {
-    codeSection.style.display = 'block';
-    codeMsg.style.display = 'none';
-  } else if (state.identityVerified && state.familyCodeRedeemed) {
-    codeSection.style.display = 'block';
-    codeMsg.textContent = 'Unlimited access active.';
-    codeMsg.style.color = 'var(--accent)';
-    codeMsg.style.display = 'block';
-    document.getElementById('familyCodeInput').style.display = 'none';
-    codeSection.querySelector('button').style.display = 'none';
-  } else if (state.identityVerified && state.familyCodeAttempts >= 3) {
-    codeSection.style.display = 'block';
-    codeMsg.textContent = 'No attempts remaining.';
-    codeMsg.style.color = '#ff6b6b';
-    codeMsg.style.display = 'block';
-    document.getElementById('familyCodeInput').style.display = 'none';
-    codeSection.querySelector('button').style.display = 'none';
-  } else {
-    codeSection.style.display = 'none';
-  }
-
-  if (typeof refreshCreatorVerifySection === 'function') refreshCreatorVerifySection();
 
   var userInfo = document.getElementById('settingsUserInfo');
   if (state.user) {

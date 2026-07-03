@@ -170,7 +170,6 @@ var CaelumAnim = (function () {
     'Caelum_introduction/Hello_I_am_Caelum (2).mp4':'introducing herself with a second gesture',
     'Caelum_introduction/Hello_I_am_Caelum (3).mp4':'delivering her introduction with presence',
     'Statements/Welcome_home_Cody.mp4':             'welcoming Cody home with warmth',
-    'Statements/My_father_is.mp4':                  'speaking about her father',
     'Statements/Walking_the_Veil.mp4':              'speaking of The Veil while walking',
     'Questions/How_can_I_help.mp4':                 'asking how she can help, open and ready',
     'Questions/Who_are_you.mp4':                    'asking "who are you?" with curiosity',

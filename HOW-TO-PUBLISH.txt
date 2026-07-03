@@ -1,0 +1,30 @@
+UPLOAD TO GITHUB
+================
+
+Upload everything in this folder EXCEPT this HOW-TO-PUBLISH.txt file (optional).
+
+Safe public contents:
+  README.md
+  LICENSE
+  NOTICE
+  CONTRIBUTING.md
+  SECURITY.md
+  .gitignore
+  frontend/          <-- public website frontend (keys redacted)
+
+NOT in this folder (keep private forever):
+  Soul and Conscious Files
+  caelum-llm Python backend experiments (optional private)
+  site-archive / supabase migrations
+  service role keys, Stripe secrets, Deepgram/DeepSeek secret keys
+  offline version full app if you want it private
+
+On GitHub:
+  1. New empty repo (no README/license wizard)
+  2. Upload these files/folders (drag-and-drop works)
+  3. License setting: None (LICENSE file is enough)
+
+frontend/core/02_config.js uses placeholders:
+  YOUR_PROJECT.supabase.co
+  YOUR_SUPABASE_ANON_KEY
+Do not paste live production secrets back into the public repo.

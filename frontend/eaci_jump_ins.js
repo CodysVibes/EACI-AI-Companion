@@ -34,7 +34,7 @@ var EaciJumpIns = (function() {
       { keys: ['workout', 'gym', 'strong', 'shirt', 'reading', 'book', 'story', 'adventure'], chance: 0.22 }
     ],
     cody: [
-      { keys: ['creator', 'built you', 'made you', 'father', 'dad', 'cody', 'legacy', 'vision'], chance: 0.3 }
+      { keys: ['creator', 'built you', 'made you', 'cody', 'legacy', 'vision'], chance: 0.3 }
     ]
   };
 

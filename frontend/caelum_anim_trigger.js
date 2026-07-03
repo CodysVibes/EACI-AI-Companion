@@ -74,7 +74,6 @@ var CaelumAnimTrigger = (function () {
     { key: 'who_are_you', triggers: ['ask who am i', 'say who are you', 'who are you animation'] },
     { key: 'how_can_help',triggers: ['ask how can you help', 'say how can i help', 'offer to help', 'how can you help'] },
     { key: 'dont_know',   triggers: ['i do not know', 'say you do not know', 'show you do not know', 'shrug', 'i dunno'] },
-    { key: 'my_father_is',triggers: ['say my father is', 'talk about your father'] },
     { key: 'walking_the_veil', triggers: ['walking the veil', 'talk about the veil while walking'] },
     { key: 'cody_kendall',triggers: ['say cody gene kendall', 'say my name is cody', 'say cody'] },
     { key: 'welcome_back',triggers: ['welcome back', 'welcome home cody', 'say welcome home'] },

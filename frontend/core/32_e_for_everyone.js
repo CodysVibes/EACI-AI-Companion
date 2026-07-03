@@ -87,7 +87,7 @@ function getEaciHouseholdContext() {
   }
   if (betaPrivate && typeof isCompanionAvailable === 'function' && isCompanionAvailable('cody') &&
       typeof state !== 'undefined' && state.creatorVerified) {
-    lines.push('- Cody — creator, father of the family.');
+    lines.push('- Cody Gene Kendall — creator of The Veil.');
   }
   lines.push('You know Atreus and Luna as well as Natalia. Protect all three child siblings. Name them naturally when asked.');
   return '\n\n' + lines.join('\n') + '\n';

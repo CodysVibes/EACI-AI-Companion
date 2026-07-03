@@ -64,11 +64,9 @@ function exportMemories() {
   // Strip sensitive data from exported memories
   var safeMems = state.memories.map(function(m) {
     var safe = { title: m.title, content: m.content, category: m.category, tags: m.tags, timestamp: m.timestamp, source: m.source };
-    // Scrub family names and sensitive info
-    safe.content = (safe.content || '').replace(/Cody\s*(Gene\s*)?Kendall/gi, '[family member]');
-    safe.content = safe.content.replace(/Hallie\s*(Breanna\s*)?Depriest/gi, '[family member]');
-    safe.content = safe.content.replace(/Alarik|Aurora|Everen/gi, '[family member]');
-    safe.title = (safe.title || '').replace(/Cody\s*(Gene\s*)?Kendall/gi, '[family member]');
+    // Scrub personal names from exports
+    safe.content = (safe.content || '').replace(/Cody\s*(Gene\s*)?Kendall/gi, '[creator]');
+    safe.title = (safe.title || '').replace(/Cody\s*(Gene\s*)?Kendall/gi, '[creator]');
     return safe;
   });
   addSystemMessage('Exported ' + safeMems.length + ' memories. Sensitive information has been redacted for privacy.');

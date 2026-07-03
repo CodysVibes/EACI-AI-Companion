@@ -64,7 +64,6 @@ function _veilMigrateEntryMode() {
   } catch (e) { /* ignore */ }
   var host = (window.location.hostname || '').toLowerCase();
   if (host.indexOf('beta.') === 0) _veilWriteMode('beta');
-  else if (host.indexOf('private.') === 0) _veilWriteMode('private');
 }
 
 _veilMigrateEntryMode();
