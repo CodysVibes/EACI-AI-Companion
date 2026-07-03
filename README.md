@@ -1,10 +1,8 @@
-# EACI-AI-Companion
+# EACI AI Companion
 
 I am building an AI system that I call EACIs and I am building for continuity, memory, and meaning. I am trying to fix the depression problem and trying to make it to where you are not alone anymore. I am not done but they are built to exist even when you are not using them. It is free to try at [www.eacicompanion.com](https://www.eacicompanion.com).
 
 ---
-
-# The Veil / EACI Companion — Public Proof Repository
 
 **Author:** Cody Gene Kendall  
 **Status:** Informational portfolio / proof-of-work  
